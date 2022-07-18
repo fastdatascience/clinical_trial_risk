@@ -1,6 +1,9 @@
 # List of the training PDF files
 
-Some of these files are confidential, but the ones which are not confidential are downloadable by the `download-raw-protocols.sh` script.
+The majority of the training PDF files used in the development of this tool are available publicly.
+They downloadable by the `download-raw-protocols.sh` script.
+A small minority of files are not public and will not be downloadable.
+However, you can still develop the tool using the public files.
 
 * EDD-Cholera-2016-Qadri-Shanchol.pdf
 * EDD-R-2017-G-V.pdf
