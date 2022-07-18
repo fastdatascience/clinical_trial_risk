@@ -29,7 +29,7 @@ wget https://clinicaltrials.gov/ProvidedDocs/87/NCT01865487/Prot_000.pdf -O "TB-
 wget https://clinicaltrials.gov/ProvidedDocs/94/NCT02717494/Prot_001.pdf -O "HIV-HIV-2016-Weinberg-NICHP1091.pdf"
 wget https://clinicaltrials.gov/ProvidedDocs/77/NCT01900977/Prot_ICF_000.pdf -O "IV-HIV-2016-Ayles-A Study of the HIV prevention Trials Network.pdf"
 wget https://clinicaltrials.gov/ProvidedDocs/22/NCT02793622/Prot_SAP_000.pdf -O "MAL-MAL-2018-Dorsey-PROMOTE Birth Cohort 1.pdf"
-wget https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6806442/bin/jama-322-1570-s001.pdf -O "MAT-Cervical Disease-2019-Greene-LEEP.pdf"
+# wget https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6806442/bin/jama-322-1570-s001.pdf -O "MAT-Cervical Disease-2019-Greene-LEEP.pdf" # Can only download using browser not WGET
 wget https://media.tghn.org/medialibrary/2021/10/EDD-Cholera-2016-Qadri-Shanchol.pdf
 wget https://media.tghn.org/medialibrary/2021/10/EDD-rotavirus-2017-Isanaka-ROSE.pdf
 wget https://media.tghn.org/medialibrary/2021/10/HIV-HIV-2018-Labhardt-CASCADE.pdf -O "HIV-HIV-2018-Labhardt-CASCADE.pdf"
