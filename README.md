@@ -104,6 +104,12 @@ python train_simulation_classifier.py
 python train_word_cloud.py
 ```
 
+Alternatively on Linux/Unix you can run a shell script to train all models:
+
+```
+for f in `ls train*py`; do python $f; done
+```
+
 This will write to the following files:
 
 * `app/models/condition_classifier.pkl.bz2` - the three-way Naive Bayes classifier model that classifies protocols into HIV, TB or other.
