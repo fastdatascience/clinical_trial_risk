@@ -43,7 +43,11 @@ for root, folder, files in os.walk(input_folder):
         full_file = input_folder + "/" + file_name
         print(full_file)
 
-        texts = extract_text_from_pdf(full_file)
+        try:
+            texts = extract_text_from_pdf(full_file)
+        except:
+            print ("Error processing", full_file, ". Skipping")
+            continue
         output_file = output_folder + "/" + file_name + ".pkl"
 
         with open(output_file, 'wb') as fo:
