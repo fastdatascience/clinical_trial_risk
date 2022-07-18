@@ -1,0 +1,34 @@
+# reference: https://cloud.google.com/appengine/docs/flexible/python/reference/app-yaml
+
+service: protocols
+runtime: python39
+env: standard #standard or flex
+
+instance_class: B4 # Can go to B8 if crashes. B4_1G definitely works fine. B4 does not work, it doesn't have enough memory.
+
+# Use Basic Scaling to save money. It means it turns off when it times out, so you might only pay for a smaller number of hours per month depending on the number of users.
+# But manual scaling for performance.
+basic_scaling:
+    max_instances: 1 # Originally 2. Max could be 10. But would be too expensive
+    idle_timeout: 10m
+#
+#manual_scaling:
+#    instances: 1 # Try with just 1 instance, if too slow then scale up to 2.
+
+resources: # Only relevant if using flex environment
+    cpu: 96 # Originally 1.
+    memory_gb: 100 # Originally 1. local Docker needed at least 1.012GiB, so including margin of error
+    disk_size_gb: 10
+
+entrypoint: gunicorn -b 0.0.0.0:8080 application:server
+
+# Force https and redirect http to https
+handlers:
+- url: /.*
+  secure: always
+#  login: required
+  redirect_http_response_code: 301
+  script: auto
+
+env_variables:
+  TIKA_SERVER_ENDPOINT: https://fdstika.azurewebsites.net/

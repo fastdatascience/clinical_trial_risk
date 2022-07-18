@@ -1,0 +1,14 @@
+version: "3"
+services:
+  protocols-front:
+    image: regprotocolsfds.azurecr.io/protocols-front
+    build: .
+    ports:
+      - "80:80"
+    environment:
+      - TIKA_SERVER_ENDPOINT=http://protocols-tika:9998
+  protocols-tika:
+    image: regprotocolsfds.azurecr.io/protocols-tika
+    build: ./tika
+    ports:
+      - "9998:9998"

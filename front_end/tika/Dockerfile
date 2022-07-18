@@ -1,0 +1,1 @@
+FROM apache/tika:1.28.2-full
