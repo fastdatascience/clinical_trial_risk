@@ -9,7 +9,7 @@ from util.score_to_risk_level_converter import get_excel_formula_for_risk_level,
 
 
 def calculate_risk_level(file_name: str, condition: str, phase: float, sap: int, effect_estimate: int,
-                         num_subjects_and_tertile: list, is_international: int, simulation: int) -> tuple:
+                         num_subjects_and_tertile: list,num_arms:int, is_international: int, simulation: int) -> tuple:
     """
     Calculate the risk of a trial given the parameters that have been extracted about it by the NLP components.
     :param file_name:
@@ -40,6 +40,7 @@ def calculate_risk_level(file_name: str, condition: str, phase: float, sap: int,
                        "Number of subjects",
                        "Lower tertile number of subjects for phase and pathology",
                        "Upper tertile number of subjects for phase and pathology",
+                       "Number of arms",
                        "Trial phase",
                        "SAP completed?",
                        "Effect Estimate disclosed?",
@@ -49,6 +50,7 @@ def calculate_risk_level(file_name: str, condition: str, phase: float, sap: int,
                        "Constant"
                        ]
     df["reason"] = [file_name,
+                    "",
                     "",
                     "",
                     "",
@@ -66,6 +68,7 @@ def calculate_risk_level(file_name: str, condition: str, phase: float, sap: int,
                    num_subjects,
                    lower_tertile,
                    upper_tertile,
+                   num_arms,
                    max((phase, 0)),
                    max((sap, 0)),
                    max((effect_estimate, 0)),
@@ -75,6 +78,7 @@ def calculate_risk_level(file_name: str, condition: str, phase: float, sap: int,
                    1
                    ]
     df["Weight"] = [None,
+                    None,
                     None,
                     None,
                     None,

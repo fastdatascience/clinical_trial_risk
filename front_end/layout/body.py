@@ -94,6 +94,7 @@ rows = [
     dcc.Store(id="num_endpoints_to_pages"),
     dcc.Store(id="num_sites_to_pages"),
     dcc.Store(id="num_subjects_to_pages"),
+    dcc.Store(id="num_arms_to_pages"),
     dcc.Store(id="phase_to_pages"),
     dcc.Store(id="sap_to_pages"),
     dcc.Store(id="simulation_to_pages"),
@@ -389,6 +390,32 @@ rows.append(
                                     ], className="control_label"),
                             html.Span(
                                 "The AI attempted to extract the sample size from the protocol. Trials with an adequate sample size are more likely to be informative. Sample sizes are converted from raw numbers to a tertile (0, 1, 2) indicating a small, medium or large trial for this phase and pathology. Click 'explain' to find out which words on which pages led the AI to this decision.",
+                                className="tooltiptext"
+                            )
+                        ],
+                        className="tooltip",
+
+                    ),
+                    html.Br(),
+                    html.Span(
+                        [
+                            html.P(["Number of arms ", html.Span("", id="arms_traffic_light"), " ",
+                                    html.A(html.Sup("explain"), id="explain_num_arms",
+                                           )],
+                                   className="control_label"),
+                            dcc.Dropdown(
+                                id="num_arms",
+                                value=2,
+                                options=[{"label": "1", "value": 1},
+                                         {"label": "2", "value": 2},
+                                         {"label": "3", "value": 3},
+                                         {"label": "4", "value": 4},
+                                         {"label": "5+", "value": 5}, ],
+                            className = "dcc_control",
+),
+                            html.P("", id="num_arms_explanation", className="control_label"),
+                            html.Span(
+                                "The AI attempted to extract the number of arms from the protocol. Click 'explain' to find out which words on which pages led the AI to this decision.",
                                 className="tooltiptext"
                             )
                         ],

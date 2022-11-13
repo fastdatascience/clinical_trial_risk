@@ -12,7 +12,12 @@ class TestNumArmsExtractor(unittest.TestCase):
         self.assertEqual(None, output["prediction"])
         self.assertDictEqual({}, output["pages"])
 
-    def test_simple_num_arms_present(self):
+    def test_simple_num_arms_present_word(self):
+        output = extractor.process([["this", "study", "has", "four", "experimental", "arms"]])
+        self.assertEqual(4, output["prediction"])
+        self.assertDictEqual({"four experimental arms": [0]}, output["pages"])
+
+    def test_simple_num_arms_present_numeric(self):
         output = extractor.process([["this", "study", "has", "4", "experimental", "arms"]])
         self.assertEqual(4, output["prediction"])
-        self.assertDictEqual({"4": 0}, output["pages"])
+        self.assertDictEqual({"4": [0]}, output["pages"])

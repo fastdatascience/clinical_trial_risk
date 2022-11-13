@@ -4,6 +4,7 @@ from processors.condition_extractor import ConditionExtractor
 from processors.country_extractor import CountryExtractor
 from processors.duration_extractor import DurationExtractor
 from processors.effect_estimate_extractor import EffectEstimateExtractor
+from processors.num_arms_extractor import NumArmsExtractor
 from processors.num_endpoints_extractor import NumEndpointsExtractor
 from processors.num_sites_extractor import NumSitesExtractor
 from processors.num_subjects_extractor import NumSubjectsExtractor
@@ -25,6 +26,7 @@ class MasterProcessor:
         self.num_endpoints_extractor = NumEndpointsExtractor()
         self.num_sites_extractor = NumSitesExtractor()
         self.num_subjects_extractor = NumSubjectsExtractor(num_subjects_extractor_model_file)
+        self.num_arms_extractor = NumArmsExtractor()
         self.country_extractor = CountryExtractor()
         self.simulation_extractor = SimulationExtractor(simulation_extractor_model_file)
 
@@ -126,6 +128,18 @@ class MasterProcessor:
                 num_subjects_to_pages = {"prediction": 0}
                 print(traceback.format_exc())
 
+        if "num_arms" in disable:
+            num_subjects_to_pages = {"prediction": 0}
+        else:
+            report_progress("Searching for a number of arms...")
+            try:
+                num_arms_to_pages = self.num_arms_extractor.process(tokenised_pages)
+                report_progress(f"It looks like the trial has {num_arms_to_pages['prediction']} arms.\n")
+            except:
+                report_progress("Error extracting number of arms!\n")
+                num_arms_to_pages = {"prediction": 0}
+                print(traceback.format_exc())
+
         if "country" in disable:
             country_to_pages = {"prediction": []}
         else:
@@ -155,4 +169,4 @@ class MasterProcessor:
                 report_progress("It does not look like the authors used simulation for sample size.\n")
 
         return tokenised_pages, condition_to_pages, phase_to_pages, sap_to_pages, \
-               effect_estimate_to_pages, num_subjects_to_pages, country_to_pages, simulation_to_pages
+               effect_estimate_to_pages, num_subjects_to_pages, num_arms_to_pages, country_to_pages, simulation_to_pages

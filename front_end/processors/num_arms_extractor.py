@@ -30,7 +30,7 @@ for n in range(1, 20):
 matcher = Matcher(nlp.vocab)
 patterns = [
     # [{"LIKE_NUM":True},  {"LOWER": {"IN": ["treatment", "study", "dose"]}, "OP":"?"}, {"LOWER": {"IN": ["arm", "arms", "group", "groups", "subgroup", "subgroups", "cohort", "cohorts"]}}],
-    [{"LOWER": {"IN": number_words}}, {"LOWER": {"IN": ["treatment", "study", "dose"]}},
+    [{"LOWER": {"IN": number_words}}, {"LOWER": {"IN": ["treatment", "study", "dose", "experimental", "dosage"]}},
      {"LOWER": {"IN": ["arm", "arms", "group", "groups", "subgroup", "subgroups", "cohort", "cohorts"]}}],
     #            [{"LOWER":{"IN":number_words}},  {"LOWER": {"IN": ["group", "groups", "subgroup", "subgroups", "cohort", "cohorts"]}}],
     [{"LOWER": {"IN": list(word2num)}}, {"LOWER": "-", "OP": "?"}, {"LOWER": {"IN": ["armed"]}}]
@@ -63,7 +63,7 @@ class NumArmsExtractor:
 
         num_arms_to_pages = sorted(num_arms_to_pages.items(), key=lambda v: len(v[1]), reverse=True)
 
-        prediction = 0
+        prediction = None
         # if len(num_arms_to_pages) == 1:
         if len(num_arms_to_pages) == 1 or \
                 (len(num_arms_to_pages) > 1 and len(num_arms_to_pages[0][1]) > len(num_arms_to_pages[1][1])):
@@ -71,7 +71,7 @@ class NumArmsExtractor:
                 if matching_span.text in word2num:
                     prediction = word2num[matching_span.text]
                     break
-        if prediction > 5:
+        if prediction is not None and prediction > 5:
             prediction = 5
 
         num_arms_to_pages = [(phrase.text, value) for phrase, value in num_arms_to_pages]

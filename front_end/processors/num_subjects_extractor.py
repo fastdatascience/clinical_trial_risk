@@ -11,7 +11,7 @@ from os.path import exists
 from util.demonym_finder import demonym_to_country_code
 from util.page_tokeniser import iterate_tokens
 
-nlp = spacy.load('en_core_web_sm', disable=['ner', 'tagger', 'parser', 'lemmatizer'])
+from util.spacy_wrapper import nlp
 
 patterns = dict()
 

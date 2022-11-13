@@ -25,6 +25,8 @@ def generate_pdf(export_pdf_button_clicks, data, columns, tertiles_data, tertile
                  effect_estimate_to_pages,
                  num_subjects,
                  num_subjects_to_pages,
+                 num_arms,
+                 num_arms_to_pages,
                  countries,
                  country_to_pages,
                  simulation,
@@ -194,6 +196,7 @@ div {
                     None,
                     None,
                     num_subjects_to_pages,
+                    num_arms_to_pages,
                     phase_to_pages,
                     sap_to_pages,
                     simulation_to_pages)

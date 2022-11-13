@@ -123,6 +123,8 @@ def display_progress_bar(dataset, data, score):
         Output("effect_estimate_to_pages", "data"),
         Output("num_subjects", "value"),
         Output("num_subjects_to_pages", "data"),
+        Output("num_arms", "value"),
+        Output("num_arms_to_pages", "data"),
         Output("countries", "value"),
         Output("country_to_pages", "data"),
         Output("simulation", "value"),
@@ -177,7 +179,7 @@ def user_uploaded_file(  # set_progress,
     desc = f"Protocol: {file_name}"
 
     start_time = time.time()
-    tokenised_pages, condition_to_pages, phase_to_pages, sap_to_pages, effect_estimate_to_pages, num_subjects_to_pages, country_to_pages, simulation_to_pages = master_processor.process_protocol(
+    tokenised_pages, condition_to_pages, phase_to_pages, sap_to_pages, effect_estimate_to_pages, num_subjects_to_pages, num_arms_to_pages, country_to_pages, simulation_to_pages = master_processor.process_protocol(
         pages, report_progress)
     end_time = time.time()
 
@@ -191,6 +193,7 @@ def user_uploaded_file(  # set_progress,
     sap = sap_to_pages['prediction']
     effect_estimate = effect_estimate_to_pages['prediction']
     num_subjects = num_subjects_to_pages['prediction']
+    num_arms = num_arms_to_pages['prediction']
     countries = country_to_pages['prediction']
     simulation = simulation_to_pages['prediction']
 
@@ -198,7 +201,7 @@ def user_uploaded_file(  # set_progress,
 
     return [file_name, str(file_date), desc, page_count, tokenised_pages, condition, condition_to_pages,
             phase, phase_to_pages, sap, sap_to_pages, effect_estimate, effect_estimate_to_pages,
-            num_subjects, num_subjects_to_pages, countries, country_to_pages, simulation, simulation_to_pages,
+            num_subjects, num_subjects_to_pages, num_arms, num_arms_to_pages, countries, country_to_pages, simulation, simulation_to_pages,
             num_subjects_explanation,
             tasks_completed
             ]
@@ -220,6 +223,7 @@ def user_uploaded_file(  # set_progress,
         Input('sap', 'value'),
         Input('effect_estimate', 'value'),
         Input('num_subjects_and_tertile', 'data'),
+        Input('num_arms', 'data'),
         Input('num_sites', 'value'),
         Input('num_endpoints', 'value'),
         Input('duration', 'value'),
@@ -235,6 +239,7 @@ def fill_table(
         sap,
         effect_estimate,
         num_subjects_and_tertile,
+        num_arms,
         num_sites,
         num_endpoints,
         duration,
@@ -262,6 +267,7 @@ def fill_table(
             is_international = int(len(countries) > 1)
             total_score, df, description = calculate_risk_level(file_name, condition, phase, sap, effect_estimate,
                                                                 num_subjects_and_tertile,
+                                                                num_arms,
                                                                 is_international, simulation)
 
         table_data = list([dict(d) for _, d in df.iterrows()])
@@ -299,6 +305,8 @@ def fill_table(
         State("effect_estimate_to_pages", "data"),
         State("num_subjects", "value"),
         State("num_subjects_to_pages", "data"),
+        State("num_subjects", "value"),
+        State("num_arms_to_pages", "data"),
         State("countries", "value"),
         State("country_to_pages", "data"),
         State("simulation", "value"),
@@ -389,6 +397,7 @@ def show_gauge(
         Input("num_endpoints_to_pages", "data"),
         Input("num_sites_to_pages", "data"),
         Input("num_subjects_to_pages", "data"),
+        Input("num_arms_to_pages", "data"),
         Input("phase_to_pages", "data"),
         Input("sap_to_pages", "data"),
         Input("simulation_to_pages", "data"),

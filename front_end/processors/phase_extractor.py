@@ -1,7 +1,6 @@
 import spacy
 from spacy.matcher import PhraseMatcher
-
-nlp = spacy.load('en_core_web_sm', disable=['ner', 'tagger', 'parser', 'lemmatizer'])
+from util.spacy_wrapper import nlp
 
 phase_synonyms = {1: ['phase i', 'phase 1 b', 'phase 1', 'phase 1.0'],
                   1.5: ['phase i ii', 'phase 1 2', 'phase 1 2 a'],

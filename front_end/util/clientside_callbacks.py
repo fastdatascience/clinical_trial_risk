@@ -47,7 +47,7 @@ def add_clientside_callbacks(dash_app):
     # When the user clicks "View log" or "Explain", the tab view is put to the correct tab.
     # If they click a control with ID e.g. explain_condition, then graph is set to condition.
     dash_app.clientside_callback(
-        """function(display_log, page_count, condition, phase, sap, effect_estimate, num_subjects, country, simulation, tertiles) {
+        """function(display_log, page_count, condition, phase, sap, effect_estimate, num_subjects, num_arms, country, simulation, tertiles) {
             var triggered = dash_clientside.callback_context.triggered.map(t => t.prop_id);
             if (triggered === null) {
                 return ["tab_graph", "condition"];
@@ -75,7 +75,7 @@ def add_clientside_callbacks(dash_app):
         [Input("view_log", "n_clicks"), Input("page_count", "n_clicks"), Input("explain_condition", "n_clicks"),
          Input("explain_phase", "n_clicks"), Input("explain_sap", "n_clicks"),
          Input("explain_effect_estimate", "n_clicks"),
-         Input("explain_num_subjects", "n_clicks"), Input("explain_country", "n_clicks"),
+         Input("explain_num_subjects", "n_clicks"),Input("explain_num_arms", "n_clicks"), Input("explain_country", "n_clicks"),
          Input("explain_simulation", "n_clicks"), Input("explain_tertiles", "n_clicks")
 
          ])
