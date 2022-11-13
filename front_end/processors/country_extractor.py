@@ -1,5 +1,7 @@
-from country_named_entity_recognition.country_finder import find_countries
 import re
+
+from country_named_entity_recognition.country_finder import find_countries
+
 from util.demonym_finder import find_demonyms
 
 # List of low to medium income countries.
@@ -149,16 +151,19 @@ class CountryExtractor:
             countries.extend(demonyms)
 
             for country, match in countries:
-                if country.alpha_2 in allowed_countries:
+                if True or country.alpha_2 in allowed_countries:
                     if country.alpha_2 not in country_to_pages:
                         country_to_pages[country.alpha_2] = []
                         start = match.start() - 100
                         end = match.end() + 100
-                        if start <0:
+                        if start < 0:
                             start = 0
                         if end > len(page_text) - 1:
-                            end  = len(page_text)
-                        contexts[country.flag + country.name] = f"Page {page_no + 1}: " + re.sub(r'\w+$', '', re.sub(r'^\w+', '', page_text[start:end])).strip()
+                            end = len(page_text)
+                        contexts[country.flag + country.name] = f"Page {page_no + 1}: " + re.sub(r'\w+$', '',
+                                                                                                 re.sub(r'^\w+', '',
+                                                                                                        page_text[
+                                                                                                        start:end])).strip()
                     country_to_pages[country.alpha_2].append(page_no)
 
         prediction = set()
