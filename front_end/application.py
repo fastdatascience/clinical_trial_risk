@@ -38,6 +38,7 @@ word_cloud_generator = WordCloudGenerator("models/idfs_for_word_cloud.pkl.bz2")
 master_processor = MasterProcessor("models/condition_classifier.pkl.bz2", "models/sap_classifier.pkl.bz2",
                                    "models/effect_estimate_classifier.pkl.bz2",
                                    "models/num_subjects_classifier.pkl.bz2",
+                                "models/international_classifier.pkl.bz2",
                                    "models/simulation_classifier.pkl.bz2")
 
 dash_app = dash.Dash(
