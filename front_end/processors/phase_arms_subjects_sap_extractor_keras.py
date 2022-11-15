@@ -2,7 +2,10 @@ import re
 from os.path import exists
 
 import spacy
+from tensorflow import keras
+import tensorflow_hub as hub
 
+import numpy as np
 word2num = {'one': 1,
             'two': 2,
             'three': 3,
@@ -58,16 +61,16 @@ arms_lookup = {'8': 1, '9': 2, '10': 3, '11': 4, '12': 5}
 num_subjects_lookup = {'13': '1-24', '14': '25-49', '15': '50-99', '16': '100-199', '17': '200-499', '18': '500-999',
                                '19': '1000-9999', '20': '10000-'}
 
-# Current best model: Expt11
-class PhaseArmsSubjectsSAPMultiExtractor:
+# Current best model: Expt10
+class PhaseArmsSubjectsSAPMultiExtractorKeras:
 
     def __init__(self, path_to_classifier):
         if not exists(path_to_classifier):
             print(
                 f"WARNING! UNABLE TO LOAD MULTI CLASSIFIER {path_to_classifier}. You need to run the training script.")
-            self.nlp = None
+            self.model = None
             return
-        self.nlp = spacy.load(path_to_classifier)
+        self.model = keras.models.load_model(path_to_classifier, custom_objects={'KerasLayer':hub.KerasLayer})
 
     def process(self, tokenised_pages: list) -> tuple:
         """
@@ -76,7 +79,7 @@ class PhaseArmsSubjectsSAPMultiExtractor:
         :param tokenised_pages: List of lists of tokens of each page.
         :return: The prediction (str) and a map from condition to the pages it's mentioned in.
         """
-        if self.nlp is None:
+        if self.model is None:
             print("Warning! Multi classifier not loaded.")
             return {"prediction": "Error"}
 
@@ -128,32 +131,36 @@ class PhaseArmsSubjectsSAPMultiExtractor:
                 if is_include[idx]:
                     text += tok + " "
 
-        doc = self.nlp(text)
+        doc = self.model.predict(np.asarray([text]))[0]
+
+        # make cats dict a la spacy
+        cats = {}
+        for i in range(len(doc)):
+            cats[str(i)] = doc[i]
 
         # Spacy will tag everything together as one dict. We split it up and get the best phase, arms etc
         phases_dict = {}
         for output_idx, phase in phase_lookup.items():
-            phases_dict[phase] = doc.cats[output_idx]
+            phases_dict[phase] = cats[output_idx]
 
         phase = max(phases_dict, key=phases_dict.get)
         phase_proba = phases_dict[phase]
 
         arms_dict = {}
         for output_idx, arms in arms_lookup.items():
-            arms_dict[arms] = doc.cats[output_idx]
+            arms_dict[arms] = cats[output_idx]
 
         num_arms = max(arms_dict, key=arms_dict.get)
         num_arms_proba = arms_dict[num_arms]
 
-
         num_subjects_dict = {}
         for output_idx, subjects in num_subjects_lookup.items():
-            num_subjects_dict[subjects] = doc.cats[output_idx]
+            num_subjects_dict[subjects] = cats[output_idx]
 
         num_subjects = max(num_subjects_dict, key=num_subjects_dict.get)
         num_subjects_proba = num_subjects_dict[num_subjects]
 
-        sap_proba = doc.cats["21"]
+        sap_proba = cats["21"]
         has_sap = int(sap_proba > 0.5)
 
         return {"prediction": [phase, num_arms, num_subjects, has_sap],

@@ -1,4 +1,8 @@
+import json
+import re
 import traceback
+
+import numpy as np
 
 from processors.condition_extractor import ConditionExtractor
 from processors.country_extractor import CountryExtractor
@@ -9,22 +13,21 @@ from processors.num_arms_extractor import NumArmsExtractor
 from processors.num_endpoints_extractor import NumEndpointsExtractor
 from processors.num_sites_extractor import NumSitesExtractor
 from processors.num_subjects_extractor import NumSubjectsExtractor
-from processors.phase_arms_subjects_sap_extractor import PhaseArmsSubjectsSAPMultiExtractor
+from processors.phase_arms_subjects_sap_extractor_keras import PhaseArmsSubjectsSAPMultiExtractorKeras
 from processors.phase_extractor import PhaseExtractor
 from processors.sap_extractor import SapExtractor
 from processors.simulation_extractor import SimulationExtractor
 from util import page_tokeniser
-import numpy as np
-import json
-import re
 
 is_number_regex = re.compile(r'^\d+,?\d+$')
+
 
 class MasterProcessor:
 
     def __init__(self, condition_extractor_model_file: str, sap_extractor_model_file: str,
                  effect_estimator_extractor_model_file: str, num_subjects_extractor_model_file: str,
-                 international_extractor_model_file: str, simulation_extractor_model_file: str, phase_arms_subjects_sap_multi_extractor_file:str):
+                 international_extractor_model_file: str, simulation_extractor_model_file: str,
+                 phase_arms_subjects_sap_multi_extractor_file: str):
         self.condition_extractor = ConditionExtractor(condition_extractor_model_file)
         self.phase_extractor = PhaseExtractor()
         self.sap_extractor = SapExtractor(sap_extractor_model_file)
@@ -37,7 +40,8 @@ class MasterProcessor:
         self.country_extractor = CountryExtractor()
         self.international_extractor = InternationalExtractorSpacy(international_extractor_model_file)
         self.simulation_extractor = SimulationExtractor(simulation_extractor_model_file)
-        self.spacy_phase_arms_subjects_sap_multi_extractor = PhaseArmsSubjectsSAPMultiExtractor(phase_arms_subjects_sap_multi_extractor_file)
+        self.spacy_phase_arms_subjects_sap_multi_extractor = PhaseArmsSubjectsSAPMultiExtractorKeras(
+            phase_arms_subjects_sap_multi_extractor_file)
 
     def process_protocol(self, pages: list, report_progress=print, disable: set = {}) -> tuple:
         """
@@ -201,25 +205,26 @@ class MasterProcessor:
 
         if "multi" not in disable:
             # Override or modify some of the predictions of the earlier rule-based components.
+            # This is using a neural network model which does a lot of heavy lifting but which is computationally expensive.
             report_progress("Running neural network multi-label model to refine predictions...\n")
             try:
                 multi_to_pages = self.spacy_phase_arms_subjects_sap_multi_extractor.process(tokenised_pages)
                 report_progress("Neural network model output is " + json.dumps(multi_to_pages["prediction"]) + ".\n")
 
-                report_progress("Phase is likely: " + str(multi_to_pages["prediction"][0] ) + ".\n")
+                report_progress("Phase is likely to be: " + str(multi_to_pages["prediction"][0]) + ".\n")
                 phase_to_pages["prediction"] = multi_to_pages["prediction"][0]
-                phase_to_pages["pages"] = phase_to_pages["pages"]  |  multi_to_pages["pages"][0]
+                phase_to_pages["pages"] = phase_to_pages["pages"] | multi_to_pages["pages"][0]
 
-                report_progress("Arms is likely: " + str(multi_to_pages["prediction"][1] )+ ".\n")
+                report_progress("Number of arms is likely to be: " + str(multi_to_pages["prediction"][1]) + ".\n")
                 num_arms_to_pages["prediction"] = multi_to_pages["prediction"][1]
-                num_arms_to_pages["pages"] =  num_arms_to_pages["pages"]  |  multi_to_pages["pages"][1]
+                num_arms_to_pages["pages"] = num_arms_to_pages["pages"] | multi_to_pages["pages"][1]
 
-                report_progress("Number of subjects is likely in range: " +multi_to_pages["prediction"][2]+ ".\n")
+                report_progress("Number of subjects is likely in range: " + multi_to_pages["prediction"][2] + ".\n")
                 num_subjects_range_str = multi_to_pages["prediction"][2]
-                num_subjects_to_pages["pages"] =  num_subjects_to_pages["pages"]  |  multi_to_pages["pages"][2]
+                num_subjects_to_pages["pages"] = num_subjects_to_pages["pages"] | multi_to_pages["pages"][2]
 
                 sap_to_pages["prediction"] = multi_to_pages["prediction"][3]
-                sap_to_pages["pages"] =  sap_to_pages["pages"]  |  multi_to_pages["pages"][3]
+                sap_to_pages["pages"] = sap_to_pages["pages"] | multi_to_pages["pages"][3]
 
                 # Logic to put number of subjects in correct range
                 num_subjects_range = num_subjects_range_str.split("-")
@@ -227,21 +232,26 @@ class MasterProcessor:
                 num_subjects_range_upper = None
                 if num_subjects_range[1] != "":
                     num_subjects_range_upper = int(num_subjects_range[1])
-                if num_subjects_to_pages["prediction"] >= num_subjects_range_lower and (num_subjects_range_upper is None or  num_subjects_to_pages["prediction"] <= num_subjects_range_upper):
-                    report_progress(f"Num subjects {num_subjects_to_pages['prediction'] } is already within acceptable range {num_subjects_range_str}. No change needed.\n")
+                if num_subjects_to_pages["prediction"] >= num_subjects_range_lower and (
+                        num_subjects_range_upper is None or num_subjects_to_pages[
+                    "prediction"] <= num_subjects_range_upper):
+                    report_progress(
+                        f"Num subjects {num_subjects_to_pages['prediction']} is already within acceptable range {num_subjects_range_str}. No change needed.\n")
                 else:
                     report_progress(
                         f"Num subjects {num_subjects_to_pages['prediction']} is not already within acceptable range {num_subjects_range_str}. Updating.\n")
                     is_found_new_num_subjects = False
                     for i in num_subjects_to_pages["pages"]:
-                        if is_number_regex.match(i) and int(i) >= num_subjects_range_lower and (num_subjects_range_upper is None or  int(i) <= num_subjects_range_upper):
+                        if is_number_regex.match(i) and int(i) >= num_subjects_range_lower and (
+                                num_subjects_range_upper is None or int(i) <= num_subjects_range_upper):
                             report_progress(f"Overriding with {i}")
                             num_subjects_to_pages['prediction'] = i
                             is_found_new_num_subjects = True
                             break
                     if not is_found_new_num_subjects:
                         if num_subjects_range_upper is not None:
-                            num_subjects_to_pages['prediction'] = int(np.round(np.mean([num_subjects_range_lower, num_subjects_range_upper])))
+                            num_subjects_to_pages['prediction'] = int(
+                                np.round(np.mean([num_subjects_range_lower, num_subjects_range_upper])))
                         else:
                             num_subjects_to_pages['prediction'] = num_subjects_range_lower
                         report_progress(f"Overridden with {num_subjects_to_pages['prediction']}")

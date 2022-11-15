@@ -18,3 +18,5 @@ pdfkit==1.0.0
 airium==0.2.3
 seaborn==0.11.2
 openpyxl==3.0.10
+tensorflow==2.10.0
+tensorflow_hub==0.12.0

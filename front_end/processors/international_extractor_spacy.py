@@ -10,7 +10,7 @@ class InternationalExtractorSpacy:
         if not exists(path_to_classifier):
             print(
                 f"WARNING! UNABLE TO LOAD INTERNATIONAL CLASSIFIER {path_to_classifier}. You need to run the training script.")
-            self.model = None
+            self.nlp = None
             return
         self.nlp = spacy.load(path_to_classifier)
 

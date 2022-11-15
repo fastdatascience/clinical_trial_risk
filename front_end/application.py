@@ -38,9 +38,9 @@ word_cloud_generator = WordCloudGenerator("models/idfs_for_word_cloud.pkl.bz2")
 master_processor = MasterProcessor("models/condition_classifier.pkl.bz2", "models/sap_classifier.pkl.bz2",
                                    "models/effect_estimate_classifier.pkl.bz2",
                                    "models/num_subjects_classifier.pkl.bz2",
-                                "models/spacy-textcat-international-11-model-best",
+                                   "models/spacy-textcat-international-11-model-best",
                                    "models/simulation_classifier.pkl.bz2",
-                                   "models/spacy-textcat-multilabel-phase-arms-subjects-sap-06-model-best",)
+                                   "models/phase_arm_num_subjects_model_11_keras.keras", )
 
 dash_app = dash.Dash(
     __name__, meta_tags=[{"name": "viewport", "content": "width=device-width"},
@@ -203,7 +203,8 @@ def user_uploaded_file(  # set_progress,
 
     return [file_name, str(file_date), desc, page_count, tokenised_pages, condition, condition_to_pages,
             phase, phase_to_pages, sap, sap_to_pages, effect_estimate, effect_estimate_to_pages,
-            num_subjects, num_subjects_to_pages, num_arms, num_arms_to_pages, countries, country_to_pages, simulation, simulation_to_pages,
+            num_subjects, num_subjects_to_pages, num_arms, num_arms_to_pages, countries, country_to_pages, simulation,
+            simulation_to_pages,
             num_subjects_explanation,
             tasks_completed
             ]
