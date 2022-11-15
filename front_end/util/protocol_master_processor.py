@@ -4,7 +4,7 @@ from processors.condition_extractor import ConditionExtractor
 from processors.country_extractor import CountryExtractor
 from processors.duration_extractor import DurationExtractor
 from processors.effect_estimate_extractor import EffectEstimateExtractor
-from processors.international_extractor import InternationalExtractor
+from processors.international_extractor_spacy import InternationalExtractorSpacy
 from processors.num_arms_extractor import NumArmsExtractor
 from processors.num_endpoints_extractor import NumEndpointsExtractor
 from processors.num_sites_extractor import NumSitesExtractor
@@ -18,7 +18,8 @@ from util import page_tokeniser
 class MasterProcessor:
 
     def __init__(self, condition_extractor_model_file: str, sap_extractor_model_file: str,
-                 effect_estimator_extractor_model_file: str, num_subjects_extractor_model_file: str, international_extractor_model_file: str, simulation_extractor_model_file: str):
+                 effect_estimator_extractor_model_file: str, num_subjects_extractor_model_file: str,
+                 international_extractor_model_file: str, simulation_extractor_model_file: str):
         self.condition_extractor = ConditionExtractor(condition_extractor_model_file)
         self.phase_extractor = PhaseExtractor()
         self.sap_extractor = SapExtractor(sap_extractor_model_file)
@@ -29,7 +30,7 @@ class MasterProcessor:
         self.num_subjects_extractor = NumSubjectsExtractor(num_subjects_extractor_model_file)
         self.num_arms_extractor = NumArmsExtractor()
         self.country_extractor = CountryExtractor()
-        self.international_extractor = InternationalExtractor(international_extractor_model_file)
+        self.international_extractor = InternationalExtractorSpacy(international_extractor_model_file)
         self.simulation_extractor = SimulationExtractor(simulation_extractor_model_file)
 
     def process_protocol(self, pages: list, report_progress=print, disable: set = {}) -> tuple:
@@ -157,17 +158,22 @@ class MasterProcessor:
                 report_progress(
                     f"It looks like the trial takes place in {len(country_to_pages['prediction'])} {country_ies}.\n")
 
-            international_to_pages = self.international_extractor.process(pages)
-            report_progress(
-                f"It looks like the trial may/may not be international {international_to_pages['prediction']}. Overriding found countries if applicable.\n")
-            if international_to_pages["prediction"] == 0:
-                if len(country_to_pages["prediction"]) > 1:
+            is_international_to_pages = self.international_extractor.process(tokenised_pages)
 
+            if is_international_to_pages["prediction"] == 0:
+                report_progress(
+                    f"Neural network found that trial is likely to be a single-country trial.")
+                if len(country_to_pages["prediction"]) > 1:
+                    report_progress(
+                        f"Overriding countries found. Taking the highest-scoring country.")
                     country_to_pages["prediction"] = country_to_pages["prediction"][:1]
             else:
+                report_progress(
+                    f"Neural network found that trial is likely to be international.")
                 if len(country_to_pages["prediction"]) == 1:
+                    report_progress(
+                        f"Overriding countries found. Taking all countries.")
                     country_to_pages["prediction"] = list(sorted(country_to_pages["pages"]))
-
 
         if "simulation" in disable:
             simulation_to_pages = {"prediction": -1}
