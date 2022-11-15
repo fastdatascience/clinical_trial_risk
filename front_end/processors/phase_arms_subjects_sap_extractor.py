@@ -101,20 +101,24 @@ class PhaseArmsSubjectsSAPMultiExtractor:
                     if lc_tok in {"phase", "phases"}:
                         phase_to_pages["Phase"].append(page_no)
                     elif lc_tok in ARM_TERMS:
+                        if lc_tok not in num_arms_to_pages:
+                            num_arms_to_pages[lc_tok] = []
                         num_arms_to_pages[lc_tok].append(page_no)
                     else:
+                        if lc_tok not in num_subjects_to_pages:
+                            num_subjects_to_pages[lc_tok] = []
                         num_subjects_to_pages[lc_tok].append(page_no)
                     to_include = True
                     # Override the "interesting terms" list by using some context dependent information.
                     if lc_tok == "n" and next_tok is not None and next_tok not in {"=", ">", "<", "≥"}:
                         to_include = False
-                    if tok.i > 1 and lc_tok in INTERESTING_TERMS_MUST_BE_PRECEDED_BY_NUMBER and not (
+                    if idx > 1 and lc_tok in INTERESTING_TERMS_MUST_BE_PRECEDED_BY_NUMBER and not (
                             is_number.match(prev_tok) or is_number.match(
                         antepenultimate_tok) or prev_tok.lower() in word2num or antepenultimate_tok.lower() in word2num):
                         to_include = False
 
                     if to_include:
-                        for token_index in range(tok.i - 15, tok.i + 15):
+                        for token_index in range(idx - 15, idx + 15):
                             if token_index >= 0 and token_index < len(tokens):
                                 is_include[token_index] = True
 
