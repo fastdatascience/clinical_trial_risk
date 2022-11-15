@@ -65,6 +65,7 @@ countries_options = [
     {"label": country.flag + country.name, "value": country.alpha_2}
     for country in pycountry.countries
 ]
+countries_options.append({"label": "unnamed countries", "value": "XX"})
 
 yes_no_options = [
     {"label": x, "value": y}
@@ -142,9 +143,9 @@ rows = [
                                 "Upload a Clinical Trial Protocol in PDF format, and the tool will generate a risk assessment of the trial.", ),
                             html.Div(
                                 ["You can find example protocols by searching on ", html.A(["ClinicalTrials.gov"],
-                                                                                                href="https://clinicaltrials.gov/ct2/results?cond=Hiv&age_v=&gndr=&type=&rslt=&u_prot=Y&Search=Apply",
-                                                                                                target="ct.gov"
-                                                                                                ), "."]),
+                                                                                           href="https://clinicaltrials.gov/ct2/results?cond=Hiv&age_v=&gndr=&type=&rslt=&u_prot=Y&Search=Apply",
+                                                                                           target="ct.gov"
+                                                                                           ), "."]),
                         ]
                     )
                 ],
@@ -154,7 +155,8 @@ rows = [
             html.Div(
                 [
                     # "Prototype for use on HIV and TB trials in LMICs"
-                    "Prototype for use on HIV and TB trials in ", html.A(["LMICs"], href="https://data.worldbank.org/country/XO", target="wb"),
+                    "Prototype for use on HIV and TB trials in ",
+                    html.A(["LMICs"], href="https://data.worldbank.org/country/XO", target="wb"),
                     html.Br(),
                     "Single-document protocols only.",
                     html.Br(),
@@ -278,7 +280,7 @@ rows.append(
 
     html.H3(
         ["Explanation of analysis ",
-             html.Span(" Move the mouse over an item or click 'explain' for more information",
+         html.Span(" Move the mouse over an item or click 'explain' for more information",
                    style={"font-size": "12pt", "font-weight": "normal"})]
     ),
 )
@@ -352,7 +354,7 @@ rows.append(
                         [
                             html.P(["Has the Effect Estimate been disclosed? ",
                                     html.A(html.Sup("explain"), id="explain_effect_estimate",
-                                        )],
+                                           )],
                                    className="control_label"),
                             dcc.Dropdown(
                                 id="effect_estimate",
@@ -386,7 +388,7 @@ rows.append(
                             html.P("", id="num_subjects_explanation", className="control_label"),
                             html.P(["Sample size tertile: ", html.Span([], id="sample_size_tertile"), " ",
                                     html.A(html.Sup("set values of tertiles"), id="explain_tertiles",
-                                         )
+                                           )
                                     ], className="control_label"),
                             html.Span(
                                 "The AI attempted to extract the sample size from the protocol. Trials with an adequate sample size are more likely to be informative. Sample sizes are converted from raw numbers to a tertile (0, 1, 2) indicating a small, medium or large trial for this phase and pathology. Click 'explain' to find out which words on which pages led the AI to this decision.",
@@ -411,8 +413,8 @@ rows.append(
                                          {"label": "3", "value": 3},
                                          {"label": "4", "value": 4},
                                          {"label": "5+", "value": 5}, ],
-                            className = "dcc_control",
-),
+                                className="dcc_control",
+                            ),
                             html.P("", id="num_arms_explanation", className="control_label"),
                             html.Span(
                                 "The AI attempted to extract the number of arms from the protocol. Click 'explain' to find out which words on which pages led the AI to this decision.",
@@ -476,7 +478,7 @@ rows.append(
                         [
                             html.P(["Trial uses simulation for sample size? ",
                                     html.A(html.Sup("explain"), id="explain_simulation",
-                                      )],
+                                           )],
                                    className="control_label",
                                    ),
                             dcc.Dropdown(

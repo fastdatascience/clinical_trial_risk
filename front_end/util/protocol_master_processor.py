@@ -19,7 +19,7 @@ class MasterProcessor:
 
     def __init__(self, condition_extractor_model_file: str, sap_extractor_model_file: str,
                  effect_estimator_extractor_model_file: str, num_subjects_extractor_model_file: str,
-                 international_extractor_model_file: str, simulation_extractor_model_file: str):
+                 international_extractor_model_file: str, simulation_extractor_model_file: str, phase_arms_subjects_sap_multi_extractor_file:str):
         self.condition_extractor = ConditionExtractor(condition_extractor_model_file)
         self.phase_extractor = PhaseExtractor()
         self.sap_extractor = SapExtractor(sap_extractor_model_file)
@@ -32,6 +32,7 @@ class MasterProcessor:
         self.country_extractor = CountryExtractor()
         self.international_extractor = InternationalExtractorSpacy(international_extractor_model_file)
         self.simulation_extractor = SimulationExtractor(simulation_extractor_model_file)
+        self.spacy_phase_arms_subjects_sap_multi_extractor = PhaseArmsSubjectsSAPMultiExtractor(phase_arms_subjects_sap_multi_extractor_file)
 
     def process_protocol(self, pages: list, report_progress=print, disable: set = {}) -> tuple:
         """
@@ -170,10 +171,12 @@ class MasterProcessor:
             else:
                 report_progress(
                     f"Neural network found that trial is likely to be international.")
-                if len(country_to_pages["prediction"]) == 1:
+                if len(country_to_pages["prediction"]) <= 1:
                     report_progress(
                         f"Overriding countries found. Taking all countries.")
                     country_to_pages["prediction"] = list(sorted(country_to_pages["pages"]))
+                if len(country_to_pages["prediction"]) <= 1:
+                    country_to_pages["prediction"].append("XX")
 
         if "simulation" in disable:
             simulation_to_pages = {"prediction": -1}
@@ -187,6 +190,21 @@ class MasterProcessor:
                     "The machine learning model which detects the simulation_to_pages was not loaded.\n")
             else:
                 report_progress("It does not look like the authors used simulation for sample size.\n")
+
+        if "multi" not in disable:
+            # Override or modify some of the predictions of the earlier rule-based components.
+            report_progress("Running Spacy")
+            multi_to_pages = self.spacy_phase_arms_subjects_sap_multi_extractor.process(tokenised_pages)
+            print("MULTI OUTPUT", multi_to_pages)
+            phase_to_pages["prediction"] = multi_to_pages["prediction"][0]
+            phase_to_pages["pages"] = phase_to_pages["pages"]  |  multi_to_pages["pages"][0]
+            num_arms_to_pages["prediction"] = multi_to_pages["prediction"][1]
+            num_arms_to_pages["pages"] =  num_arms_to_pages["pages"]  |  multi_to_pages["pages"][1]
+            #num_subjects_to_pages["prediction"] = multi_to_pages["prediction"][2]
+            print ("MULTI PRED", multi_to_pages["prediction"][2])
+            num_subjects_to_pages["pages"] =  num_subjects_to_pages["pages"]  |  multi_to_pages["pages"][2]
+            sap_to_pages["prediction"] = multi_to_pages["prediction"][3]
+            sap_to_pages["pages"] =  sap_to_pages["pages"]  |  multi_to_pages["pages"][3]
 
         return tokenised_pages, condition_to_pages, phase_to_pages, sap_to_pages, \
                effect_estimate_to_pages, num_subjects_to_pages, num_arms_to_pages, country_to_pages, simulation_to_pages

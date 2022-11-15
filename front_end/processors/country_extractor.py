@@ -129,6 +129,8 @@ allowed_countries = {'AF',
                      'ZM',
                      'ZW'}
 
+international_regex = re.compile(r"(?i)\b(?:(?:glob|internation|multination)al(?:ly)?|worldwide)\b")
+
 
 class CountryExtractor:
 
@@ -140,6 +142,8 @@ class CountryExtractor:
         :return: The prediction (list of strings of Alpha-2 codes) and a map from each country code to the pages it's mentioned in.
         """
         country_to_pages = {}
+        terms_to_pages = {}
+        terms_to_pages["international"] = []
 
         contexts = {}
 
@@ -166,6 +170,9 @@ class CountryExtractor:
                                                                                                         start:end])).strip()
                     country_to_pages[country.alpha_2].append(page_no)
 
+            if len(international_regex.findall(page_text)) > 0:
+                terms_to_pages["international"].append(page_no)
+
         prediction = set()
 
         if len(country_to_pages) > 0:
@@ -181,5 +188,7 @@ class CountryExtractor:
 
             first_mentioned_countries = sorted(country_to_pages.items(), key=lambda a: min(a[1]))
             prediction.add(first_mentioned_countries[0][0])
+
+        country_to_pages["international"] = terms_to_pages["international"]
 
         return {"prediction": list(prediction), "pages": country_to_pages, "context": contexts}

@@ -16,9 +16,12 @@ def pretty_print_countries(countries: list, show_flags = True) -> str:
         if idx > 0:
             human_readable_prediction += ","
         human_readable_prediction += " "
-        if show_flags:
-            human_readable_prediction += pycountry.countries.lookup(country_code).flag
-        human_readable_prediction += pycountry.countries.lookup(
-                country_code).name
+        if country_code == "XX":
+            human_readable_prediction += "one or more unspecified countries"
+        else:
+            if show_flags:
+                human_readable_prediction += pycountry.countries.lookup(country_code).flag
+            human_readable_prediction += pycountry.countries.lookup(
+                    country_code).name
 
     return human_readable_prediction

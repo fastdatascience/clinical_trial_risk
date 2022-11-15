@@ -39,7 +39,8 @@ master_processor = MasterProcessor("models/condition_classifier.pkl.bz2", "model
                                    "models/effect_estimate_classifier.pkl.bz2",
                                    "models/num_subjects_classifier.pkl.bz2",
                                 "models/spacy-textcat-international-11-model-best",
-                                   "models/simulation_classifier.pkl.bz2")
+                                   "models/simulation_classifier.pkl.bz2",
+                                   "models/spacy-textcat-multilabel-phase-arms-subjects-sap-06-model-best",)
 
 dash_app = dash.Dash(
     __name__, meta_tags=[{"name": "viewport", "content": "width=device-width"},
