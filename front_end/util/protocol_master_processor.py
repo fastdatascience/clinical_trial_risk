@@ -14,7 +14,11 @@ from processors.phase_extractor import PhaseExtractor
 from processors.sap_extractor import SapExtractor
 from processors.simulation_extractor import SimulationExtractor
 from util import page_tokeniser
+import numpy as np
+import json
+import re
 
+is_number_regex = re.compile(r'^\d+,?\d+$')
 
 class MasterProcessor:
 
@@ -139,7 +143,10 @@ class MasterProcessor:
             report_progress("Searching for a number of arms...")
             try:
                 num_arms_to_pages = self.num_arms_extractor.process(tokenised_pages)
-                report_progress(f"It looks like the trial has {num_arms_to_pages['prediction']} arms.\n")
+                if num_arms_to_pages['prediction'] is not None:
+                    report_progress(f"It looks like the trial has {num_arms_to_pages['prediction']} arm(s).\n")
+                else:
+                    report_progress(f"No explicit mention of arms found.\n")
             except:
                 report_progress("Error extracting number of arms!\n")
                 num_arms_to_pages = {"prediction": 0}
@@ -194,18 +201,54 @@ class MasterProcessor:
 
         if "multi" not in disable:
             # Override or modify some of the predictions of the earlier rule-based components.
-            report_progress("Running Spacy")
-            multi_to_pages = self.spacy_phase_arms_subjects_sap_multi_extractor.process(tokenised_pages)
-            print("MULTI OUTPUT", multi_to_pages)
-            phase_to_pages["prediction"] = multi_to_pages["prediction"][0]
-            phase_to_pages["pages"] = phase_to_pages["pages"]  |  multi_to_pages["pages"][0]
-            num_arms_to_pages["prediction"] = multi_to_pages["prediction"][1]
-            num_arms_to_pages["pages"] =  num_arms_to_pages["pages"]  |  multi_to_pages["pages"][1]
-            #num_subjects_to_pages["prediction"] = multi_to_pages["prediction"][2]
-            print ("MULTI PRED", multi_to_pages["prediction"][2])
-            num_subjects_to_pages["pages"] =  num_subjects_to_pages["pages"]  |  multi_to_pages["pages"][2]
-            sap_to_pages["prediction"] = multi_to_pages["prediction"][3]
-            sap_to_pages["pages"] =  sap_to_pages["pages"]  |  multi_to_pages["pages"][3]
+            report_progress("Running neural network multi-label model to refine predictions...\n")
+            try:
+                multi_to_pages = self.spacy_phase_arms_subjects_sap_multi_extractor.process(tokenised_pages)
+                report_progress("Neural network model output is " + json.dumps(multi_to_pages["prediction"]) + ".\n")
+
+                report_progress("Phase is likely: " + str(multi_to_pages["prediction"][0] ) + ".\n")
+                phase_to_pages["prediction"] = multi_to_pages["prediction"][0]
+                phase_to_pages["pages"] = phase_to_pages["pages"]  |  multi_to_pages["pages"][0]
+
+                report_progress("Arms is likely: " + str(multi_to_pages["prediction"][1] )+ ".\n")
+                num_arms_to_pages["prediction"] = multi_to_pages["prediction"][1]
+                num_arms_to_pages["pages"] =  num_arms_to_pages["pages"]  |  multi_to_pages["pages"][1]
+
+                report_progress("Number of subjects is likely in range: " +multi_to_pages["prediction"][2]+ ".\n")
+                num_subjects_range_str = multi_to_pages["prediction"][2]
+                num_subjects_to_pages["pages"] =  num_subjects_to_pages["pages"]  |  multi_to_pages["pages"][2]
+
+                sap_to_pages["prediction"] = multi_to_pages["prediction"][3]
+                sap_to_pages["pages"] =  sap_to_pages["pages"]  |  multi_to_pages["pages"][3]
+
+                # Logic to put number of subjects in correct range
+                num_subjects_range = num_subjects_range_str.split("-")
+                num_subjects_range_lower = int(num_subjects_range[0])
+                num_subjects_range_upper = None
+                if num_subjects_range[1] != "":
+                    num_subjects_range_upper = int(num_subjects_range[1])
+                if num_subjects_to_pages["prediction"] >= num_subjects_range_lower and (num_subjects_range_upper is None or  num_subjects_to_pages["prediction"] <= num_subjects_range_upper):
+                    report_progress(f"Num subjects {num_subjects_to_pages['prediction'] } is already within acceptable range {num_subjects_range_str}. No change needed.\n")
+                else:
+                    report_progress(
+                        f"Num subjects {num_subjects_to_pages['prediction']} is not already within acceptable range {num_subjects_range_str}. Updating.\n")
+                    is_found_new_num_subjects = False
+                    for i in num_subjects_to_pages["pages"]:
+                        if is_number_regex.match(i) and int(i) >= num_subjects_range_lower and (num_subjects_range_upper is None or  int(i) <= num_subjects_range_upper):
+                            report_progress(f"Overriding with {i}")
+                            num_subjects_to_pages['prediction'] = i
+                            is_found_new_num_subjects = True
+                            break
+                    if not is_found_new_num_subjects:
+                        if num_subjects_range_upper is not None:
+                            num_subjects_to_pages['prediction'] = int(np.round(np.mean([num_subjects_range_lower, num_subjects_range_upper])))
+                        else:
+                            num_subjects_to_pages['prediction'] = num_subjects_range_lower
+                        report_progress(f"Overridden with {num_subjects_to_pages['prediction']}")
+
+            except:
+                report_progress("Error running Spacy multi-label model!\n")
+                print(traceback.format_exc())
 
         return tokenised_pages, condition_to_pages, phase_to_pages, sap_to_pages, \
                effect_estimate_to_pages, num_subjects_to_pages, num_arms_to_pages, country_to_pages, simulation_to_pages

@@ -55,6 +55,8 @@ ARM_TERMS = {'arm', 'armed',
 phase_lookup = {'0': 0, '1': 0.5, '2': 1, '3': 1.5, '4': 2, '5': 2.5, '6': 3, '7': 4}
 arms_lookup = {'8': 1, '9': 2, '10': 3, '11': 4, '12': 5}
 
+num_subjects_lookup = {'13': '1-24', '14': '25-49', '15': '50-99', '16': '100-199', '17': '200-499', '18': '500-999',
+                               '19': '1000-9999', '20': '10000-'}
 
 # Current best model: Expt11
 class PhaseArmsSubjectsSAPMultiExtractor:
@@ -143,8 +145,7 @@ class PhaseArmsSubjectsSAPMultiExtractor:
         num_arms = max(arms_dict, key=arms_dict.get)
         num_arms_proba = arms_dict[num_arms]
 
-        num_subjects_lookup = {'13': '1-24', '14': '25+', '15': '50+', '16': '100+', '17': '200+', '18': '500+',
-                               '19': '1000+', '20': '10000+'}
+
         num_subjects_dict = {}
         for output_idx, subjects in num_subjects_lookup.items():
             num_subjects_dict[subjects] = doc.cats[output_idx]
@@ -153,7 +154,7 @@ class PhaseArmsSubjectsSAPMultiExtractor:
         num_subjects_proba = num_subjects_dict[num_subjects]
 
         sap_proba = doc.cats["21"]
-        has_sap = sap_proba > 0.5
+        has_sap = int(sap_proba > 0.5)
 
         return {"prediction": [phase, num_arms, num_subjects, has_sap],
                 "pages": [phase_to_pages, num_arms_to_pages, num_subjects_to_pages, sap_to_pages],

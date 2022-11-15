@@ -115,7 +115,7 @@ def display_breakdown_graph_by_pages_in_document(what_to_display: str, tokenised
         "num_subjects": [f"Which pages contained terms relating to the number of subjects? The sample size appears to be {prediction} with confidence {score * 100:.1f}%."],
         "num_arms": [f"Which pages contained terms relating to the number of arms? The trial appears to have {prediction} arm(s)."],
         "phase": [f"Where was the phase mentioned in the document? The graph below shows possible phases and which pages they were mentioned on. The document is most likely to be ", html.B(f"Phase {prediction}"), "."],
-        "sap": [f"Which pages contained highly statistical content and were likely to be part of the SAP? Graph of a selection of key statistical terms by page number, overlaid with page-level probabilities (in pink - click the legend to hide). The protocol is {score * 100:.1f}% likely to contain an SAP."],
+        "sap": [f"Which pages contained highly statistical content and were likely to be part of the SAP? Graph of a selection of key statistical terms by page number, overlaid with page-level probabilities (in pink - click the legend to hide)."],
         "simulation": [f"Which pages mentioned words related to simulation? The graph below shows a selection of simulation-related terms by page number. The protocol is {score * 100:.1f}% likely to involve simulation for sample size."]}
 
     graph_surtitle = graph_surtitles_lookup[what_to_display]
@@ -142,7 +142,7 @@ def display_breakdown_graph_by_pages_in_document(what_to_display: str, tokenised
         for page_no in page_nos_containing_occurrence:
             page_matrix[country_idx, page_no] += 1
 
-        if what_to_display == "country":
+        if what_to_display == "country" and len(country_code) == 2:
             country = pycountry.countries.lookup(country_code)
             name_for_y_axis = country.flag + country_code
             country_name = country.name
