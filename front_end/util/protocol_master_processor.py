@@ -9,6 +9,7 @@ from processors.num_arms_extractor import NumArmsExtractor
 from processors.num_endpoints_extractor import NumEndpointsExtractor
 from processors.num_sites_extractor import NumSitesExtractor
 from processors.num_subjects_extractor import NumSubjectsExtractor
+from processors.phase_arms_subjects_sap_extractor import PhaseArmsSubjectsSAPMultiExtractor
 from processors.phase_extractor import PhaseExtractor
 from processors.sap_extractor import SapExtractor
 from processors.simulation_extractor import SimulationExtractor
