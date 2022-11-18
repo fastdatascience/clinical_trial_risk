@@ -15,6 +15,7 @@ from processors.num_sites_extractor import NumSitesExtractor
 from processors.num_subjects_extractor import NumSubjectsExtractor
 from processors.phase_arms_subjects_sap_extractor_keras import PhaseArmsSubjectsSAPMultiExtractorKeras
 from processors.phase_extractor import PhaseExtractor
+from processors.phase_extractor_spacy import PhaseExtractorSpacy
 from processors.sap_extractor import SapExtractor
 from processors.simulation_extractor import SimulationExtractor
 from util import page_tokeniser
@@ -24,12 +25,13 @@ is_number_regex = re.compile(r'^\d+,?\d+$')
 
 class MasterProcessor:
 
-    def __init__(self, condition_extractor_model_file: str, sap_extractor_model_file: str,
+    def __init__(self, condition_extractor_model_file: str,phase_extractor_model_file:str,  phase_extractor_model_file_spacy: str, sap_extractor_model_file: str,
                  effect_estimator_extractor_model_file: str, num_subjects_extractor_model_file: str,
                  international_extractor_model_file: str, simulation_extractor_model_file: str,
                  phase_arms_subjects_sap_multi_extractor_file: str):
         self.condition_extractor = ConditionExtractor(condition_extractor_model_file)
-        self.phase_extractor = PhaseExtractor()
+        self.phase_extractor = PhaseExtractor(phase_extractor_model_file)
+        self.phase_extractor_spacy = PhaseExtractorSpacy(phase_extractor_model_file_spacy)
         self.sap_extractor = SapExtractor(sap_extractor_model_file)
         self.effect_estimate_extractor = EffectEstimateExtractor(effect_estimator_extractor_model_file)
         self.duration_extractor = DurationExtractor()
@@ -91,6 +93,20 @@ class MasterProcessor:
                 report_progress(traceback.format_exc())
                 print(traceback.format_exc())
                 phase_to_pages = {'prediction': 0}
+
+            try:
+                phase_to_pages_spacy = self.phase_extractor_spacy.process(tokenised_pages)
+                report_progress(f"Neural network thought it was a Phase {phase_to_pages_spacy['prediction']} trial.\n")
+
+                combined_scores = {}
+                for phase, score in phase_to_pages_spacy["probas"].items():
+                    orig_score = phase_to_pages["probas"].get(phase)
+                    if orig_score is not None:
+                        combined_scores[phase] = np.mean([float(score), float(orig_score)])
+                if len(combined_scores) > 0:
+                    phase_to_pages["prediction"] = float(re.sub(r'Phase ', '', max(combined_scores, key=combined_scores.get)))
+            except:
+                report_progress("Error running neural network model.\n")
 
         if "sap" in disable:
             sap_to_pages = {"prediction": -1}
@@ -169,7 +185,7 @@ class MasterProcessor:
                 report_progress("No country was found.")
             else:
                 report_progress(
-                    f"It looks like the trial takes place in {len(country_to_pages['prediction'])} {country_ies}.\n")
+                    f"It looks like the trial takes place in {len(country_to_pages['prediction'])} {country_ies}: {','.join(country_to_pages['prediction'])}\n")
 
             is_international_to_pages = self.international_extractor.process(tokenised_pages)
 
@@ -203,6 +219,7 @@ class MasterProcessor:
             else:
                 report_progress("It does not look like the authors used simulation for sample size.\n")
 
+        '''
         if "multi" not in disable:
             # Override or modify some of the predictions of the earlier rule-based components.
             # This is using a neural network model which does a lot of heavy lifting but which is computationally expensive.
@@ -222,6 +239,7 @@ class MasterProcessor:
                 report_progress("Number of subjects is likely in range: " + multi_to_pages["prediction"][2] + ".\n")
                 num_subjects_range_str = multi_to_pages["prediction"][2]
                 num_subjects_to_pages["pages"] = num_subjects_to_pages["pages"] | multi_to_pages["pages"][2]
+                num_subjects_to_pages["comment"] = num_subjects_to_pages["comment"] + " / " + multi_to_pages["comment"][2]
 
                 sap_to_pages["prediction"] = multi_to_pages["prediction"][3]
                 sap_to_pages["pages"] = sap_to_pages["pages"] | multi_to_pages["pages"][3]
@@ -250,15 +268,22 @@ class MasterProcessor:
                             break
                     if not is_found_new_num_subjects:
                         if num_subjects_range_upper is not None:
-                            num_subjects_to_pages['prediction'] = int(
-                                np.round(np.mean([num_subjects_range_lower, num_subjects_range_upper])))
+                            mid_point_of_range = np.mean([num_subjects_range_lower, num_subjects_range_upper])
                         else:
-                            num_subjects_to_pages['prediction'] = num_subjects_range_lower
-                        report_progress(f"Overridden with {num_subjects_to_pages['prediction']}")
+                            mid_point_of_range = num_subjects_range_lower
+                        report_progress(f"Mid point of the range of probable sample sizes is {mid_point_of_range}. Looking for the number occurring in the text which is closest to this midpoint.")
+                        candidates = set()
+                        for i in num_subjects_to_pages["pages"]:
+                            if is_number_regex.match(i):
+                                candidates.add(int(i))
+                        if len(candidates) > 0:
+                            num_subjects_to_pages['prediction'] = min(candidates, key = lambda i : abs(i - mid_point_of_range))
+                            report_progress(f"Overridden with {num_subjects_to_pages['prediction']}")
 
             except:
                 report_progress("Error running Spacy multi-label model!\n")
                 print(traceback.format_exc())
+        '''
 
         return tokenised_pages, condition_to_pages, phase_to_pages, sap_to_pages, \
                effect_estimate_to_pages, num_subjects_to_pages, num_arms_to_pages, country_to_pages, simulation_to_pages

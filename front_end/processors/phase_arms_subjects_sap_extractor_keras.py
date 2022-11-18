@@ -65,6 +65,7 @@ num_subjects_lookup = {'13': '1-24', '14': '25-49', '15': '50-99', '16': '100-19
 class PhaseArmsSubjectsSAPMultiExtractorKeras:
 
     def __init__(self, path_to_classifier):
+        pass
         if not exists(path_to_classifier):
             print(
                 f"WARNING! UNABLE TO LOAD MULTI CLASSIFIER {path_to_classifier}. You need to run the training script.")
@@ -73,6 +74,7 @@ class PhaseArmsSubjectsSAPMultiExtractorKeras:
         self.model = keras.models.load_model(path_to_classifier, custom_objects={'KerasLayer':hub.KerasLayer})
 
     def process(self, tokenised_pages: list) -> tuple:
+        pass
         """
         Identify multiple parameters of the trial.
 
@@ -165,4 +167,5 @@ class PhaseArmsSubjectsSAPMultiExtractorKeras:
 
         return {"prediction": [phase, num_arms, num_subjects, has_sap],
                 "pages": [phase_to_pages, num_arms_to_pages, num_subjects_to_pages, sap_to_pages],
-                "score": [phase_proba, num_arms_proba, num_subjects_proba, sap_proba]}
+                "score": [phase_proba, num_arms_proba, num_subjects_proba, sap_proba],
+                "comment": [None, None, "Sample size is likely to be in range " + re.sub(r'\-$', '+', num_subjects), None]}

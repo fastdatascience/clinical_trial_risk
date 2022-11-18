@@ -54,7 +54,7 @@ def calculate_risk_level(file_name: str, condition: str, phase: float, sap: int,
                     "",
                     "",
                     "",
-                    "",
+                    f"because the trial has {num_arms} arm{'s'[:num_arms^1]}",
                     f"because the trial is Phase {phase}",
                     "because the trial included a Statistical Analysis Plan (SAP)",
                     "because the authors disclosed an effect estimate",
@@ -82,14 +82,14 @@ def calculate_risk_level(file_name: str, condition: str, phase: float, sap: int,
                     None,
                     None,
                     None,
-                    None,
+                    2,
                     5,
-                    30,
-                    20,
+                    26,
+                    16,
                     10,
                     10,
                     10,
-                    -5
+                    -7
                     ]
     scores = df.Value * df.Weight
     df["Score"] = scores

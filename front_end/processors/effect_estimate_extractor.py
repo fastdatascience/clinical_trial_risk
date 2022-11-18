@@ -172,8 +172,10 @@ class EffectEstimateExtractor:
             for idx in range(len(top_results)):
                 token_idx = top_results.token_idx.iloc[idx]
                 token = top_results.token.iloc[idx]
-                context[token] = f"Page {top_results.page_no.iloc[0] + 1}: " + " ".join(
-                    [token for page_no, token_no, token in all_tokens[token_idx - 20:token_idx + 20]])
+                if token not in context:
+                    context[token] = ""
+                context[token] = (context[token] + " " + f"Page {top_results.page_no.iloc[0] + 1}: " + " ".join(
+                    [token for page_no, token_no, token in all_tokens[token_idx - 20:token_idx + 20]])).strip()
 
         # Add in some hard coded keywords for display purposes only
         # The presence of these keywords alone does not affect the classifier's output, as they are meaningless without a numerical value.

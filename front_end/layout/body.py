@@ -53,12 +53,14 @@ condition_options = [
 ]
 
 phase_options = [
+    {"label": "Early Phase 1 🔴", "value": 0.5},
     {"label": "1 🔴", "value": 1.0},
     {"label": "1/2 🔴", "value": 1.5},
     {"label": "2 🟡", "value": 2.0},
     {"label": "2/3 🟢", "value": 2.5},
     {"label": "3 🟢", "value": 3.0},
-    {"label": "Other/unknown", "value": 0},
+    {"label": "4 🟢", "value": 4.0},
+    {"label": "N/A or unknown", "value": 0},
 ]
 
 countries_options = [
@@ -303,13 +305,14 @@ rows.append(
                                 options=condition_options,
                                 multi=False,
                                 className="dcc_control",
+                                style={"width": "100%"}
                             ),
                             html.Span(
                                 "The AI identified the protocol as being a trial for a particular condition. Click on 'explain' to find out which words on which pages led the AI to this decision.",
                                 className="tooltiptext"
                             )
                         ],
-                        className="tooltip",
+                        className="tooltip",style={"width": "100%"}
 
                     ),
 
@@ -323,13 +326,14 @@ rows.append(
                                 options=phase_options,
                                 multi=False,
                                 className="dcc_control",
+                                style={"width": "100%"}
                             ),
                             html.Span(
                                 "The AI identified the protocol as being a trial for a particular phase. All other things being equal, later phase trials are slightly lower risk. Click 'explain' to find out which words on which pages led the AI to this decision.",
                                 className="tooltiptext"
                             )
                         ],
-                        className="tooltip",
+                        className="tooltip",style={"width": "100%"}
                     ),
                     html.Span(
                         [
@@ -347,7 +351,7 @@ rows.append(
                                 className="tooltiptext"
                             )
                         ],
-                        className="tooltip",
+                        className="tooltip"
                     ),
 
                     html.Span(

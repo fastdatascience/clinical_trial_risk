@@ -50,6 +50,7 @@ class NumArmsExtractor:
         tokenised_pages = [[string.lower() for string in sublist] for sublist in tokenised_pages]
 
         num_arms_to_pages = {}
+        context = {}
 
         for page_number, page_tokens in enumerate(tokenised_pages):
             doc = spacy.tokens.doc.Doc(
@@ -60,6 +61,12 @@ class NumArmsExtractor:
                 if matching_span not in num_arms_to_pages:
                     num_arms_to_pages[matching_span] = []
                 num_arms_to_pages[matching_span].append(page_number)
+
+                text = matching_span.text.lower()
+                sentence = doc[max(0, start - 5):min(len(doc), end + 5)].text
+                if text not in context:
+                    context[text] = ""
+                context[text] = (context[text] + " " + f"Page {page_number + 1}: " + sentence).strip()
 
         num_arms_to_pages = sorted(num_arms_to_pages.items(), key=lambda v: len(v[1]), reverse=True)
 
@@ -74,6 +81,10 @@ class NumArmsExtractor:
         if prediction is not None and prediction > 5:
             prediction = 5
 
-        num_arms_to_pages = [(phrase.text, value) for phrase, value in num_arms_to_pages]
+        num_arms_text_to_pages = {}
+        for phrase, value in num_arms_to_pages:
+            if phrase.text.lower() not in num_arms_to_pages:
+                num_arms_text_to_pages[phrase.text.lower()] = []
+            num_arms_text_to_pages[phrase.text.lower()].extend(value)
 
-        return {"prediction": prediction, "pages": dict(num_arms_to_pages)}
+        return {"prediction": prediction, "pages": num_arms_text_to_pages, "context": context}

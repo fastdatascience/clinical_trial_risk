@@ -35,4 +35,4 @@ class InternationalExtractorSpacy:
 
         is_international_pred = int(prediction_proba > 0.5)
 
-        return {"prediction": is_international_pred, "pages": {}, "score": prediction_proba}
+        return {"prediction": is_international_pred, "pages": {}, "probas": prediction_proba}

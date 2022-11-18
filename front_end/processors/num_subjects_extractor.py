@@ -1,16 +1,16 @@
 import bz2
 import pickle as pkl
-import pandas as pd
+import re
 from collections import Counter
+from os.path import exists
+
 import numpy as np
+import pandas as pd
 import spacy
 from spacy.matcher import Matcher
-import re
-from os.path import exists
 
 from util.demonym_finder import demonym_to_country_code
 from util.page_tokeniser import iterate_tokens
-
 from util.spacy_wrapper import nlp
 
 patterns = dict()
@@ -18,7 +18,8 @@ patterns = dict()
 patterns["sample size"] = ['sample size is #', 'sample size #', 'sample size of #', 'sample size to #',
                            'sample size increase to #']
 patterns["sample"] = ['sample #', 'sample of #', 'sampling #']
-patterns["enroll"] = ['enroll #', 'enrol #', 'enrolling #', 'enroll up to #', 'enrolling up to #', 'enrol up to #', 'enrolment #', 'enrollment #', 'enrolment of #', 'enrollment of #']
+patterns["enroll"] = ['enroll #', 'enrol #', 'enrolling #', 'enroll up to #', 'enrolling up to #', 'enrol up to #',
+                      'enrolment #', 'enrollment #', 'enrolment of #', 'enrollment of #']
 patterns["will_enroll"] = ["will enroll #", "will enrol #", "aim to enroll #", "aim to enrol #"]
 patterns["recruit"] = ['recruit #', 'recruiting #', 'recruitment #', 'recruitment of']
 patterns["will_recruit"] = ["will recruit #", "aim to recruit #"]
@@ -32,20 +33,30 @@ patterns["n ="] = ['n = #', 'n > #', 'n ≥ #']
 patterns["participants"] = ['# total participants', 'number of participants #', '# participants',
                             'participants up to #']
 patterns["subjects"] = ['# total subjects', 'number of subjects #', '# subjects', 'subjects up to #']
-patterns["misc_personal_noun"] = ['# people', '# persons', '# residents', '# mother infant pairs','# mother child pairs','# mother - child pairs',
-                                  '# mother - infant pairs', '# individuals', "# sexually active", "# patients", "# pts", "# cases", "# * cases"]
+patterns["misc_personal_noun"] = ['# people', '# persons', '# residents', '# mother infant pairs',
+                                  '# mother child pairs', '# mother - child pairs',
+                                  '# mother - infant pairs', '# individuals', "# sexually active", "# patients",
+                                  "# pts", "# cases", "# * cases", '# * patients', '# * pts',
+                                  '# outpatients', '# * outpatients', '# * subjects']
 patterns["gender"] = ['# male', '# males', '# female', '# females', '# women', '# men', '# mothers', '# pregnant']
 patterns["age"] = ['# infants', '# adult', '# adults', '# adolescents', '# babies', '# children']
-patterns["disease_state"] = ['# healthy', '# hiv infected', '# hiv positive', '# hiv negative', '# hiv - infected', '# hiv - positive', '# hiv - negative',]
+patterns["disease_state"] = ['# healthy', '# hiv infected', '# hiv positive', '# hiv negative', '# hiv - infected',
+                             '# hiv - positive', '# hiv - negative', '# evaluable',
+                             '# evaluable', '# efficacy-evaluable', '# efficacy - evaluable', '# activated']
 patterns["selection"] = ['selection #', 'selection of #', ]
 patterns["demonym"] = ["# " + demonym.lower() for demonym in demonym_to_country_code]
 patterns["approximately"] = ["approximately #", "up to #"]
 patterns["to achieve"] = ["# to achieve"]
+patterns["optional_colon"] = ["number of subjects : #", "planned subjects : #", "subjects planned : #", "enrolment : #",
+                              "enrollment : #", "sample size : #",
+                              "number of subjects #", "planned subjects #", "subjects planned #", "enrolment #",
+                              "enrollment #", "sample size #"]
 
 # These patterns do not contain a number. The feature generated from them is just the shortest distance from a candidate number to the nearest occurrence of these words.
 patterns["distance to sample size no number"] = ["sample size"]
 patterns["distance to power no number"] = ["power", "powered"]
-patterns["distance to num subjects no number"] = ["number of subjects", "number of participants", "number of patients", "number of pts"]
+patterns["distance to num subjects no number"] = ["number of subjects", "number of participants", "number of patients",
+                                                  "number of pts"]
 patterns["distance to subjects no number"] = ["subjects", "participants", "patients", "pts"]
 patterns["distance to cases no number"] = ["cases"]
 # These are anticipated to be negative features.
@@ -82,7 +93,7 @@ for feature_name, feature_patterns in patterns.items():
                     if is_range == 1:
                         pattern.append({"LOWER": {"IN": ["-", "–", "to"]}})
                         pattern.append({"LIKE_NUM": True})
-                elif word == "*": # wildcard
+                elif word == "*":  # wildcard
                     pattern.append({"LIKE_NUM": False})
                 else:
                     pattern.append({"LOWER": word})
@@ -138,9 +149,12 @@ def extract_features(tokenised_pages: list):
             num_subjects_to_pages[value].append(page_no)
 
             if value not in contexts:
-                start = max(0,  phrase_match[1] - 5)
-                end = min(len(tokens) - 1, phrase_match[2] + 5)
-                contexts[value] = f"Page {page_no + 1}: " + " ".join(tokens[start:end])
+                contexts[value] = ""
+            start = max(0, phrase_match[1] - 15)
+            end = min(len(tokens) - 1, phrase_match[2] + 15)
+
+            contexts[value] = (
+                        contexts[value] + " " + f"Page {page_no + 1}: " + " ".join(tokens[start:end])).strip()
 
     for candidate in features:
         for distance_feature in patterns_without_number:
@@ -205,10 +219,9 @@ class NumSubjectsExtractor:
         if len(top_indices) > 5:
             top_indices = top_indices[:5]
 
-
         possible_candidates = []
         for idx in top_indices:
-            if probas[idx]  > score * 0.1 and len(possible_candidates) < 3:
+            if probas[idx] > score * 0.1 and len(possible_candidates) < 3:
                 possible_candidates.append(df_instances.candidate.iloc[idx])
         possible_candidates = "Possible sample sizes found: " + ", ".join(possible_candidates)
 
@@ -224,4 +237,5 @@ class NumSubjectsExtractor:
             if k not in top_values:
                 del contexts[k]
 
-        return {"prediction": int(num_subjects), "pages": num_subjects_to_pages, "context": contexts, "score": score, "comment": possible_candidates}
+        return {"prediction": int(num_subjects), "pages": num_subjects_to_pages, "context": contexts, "score": score,
+                "comment": possible_candidates}

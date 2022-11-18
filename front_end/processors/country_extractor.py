@@ -1,6 +1,6 @@
 import re
 
-from country_named_entity_recognition.country_finder import find_countries
+from country_named_entity_recognition import find_countries
 
 from util.demonym_finder import find_demonyms
 
@@ -157,21 +157,21 @@ class CountryExtractor:
                 if True or country.alpha_2 in allowed_countries:
                     if country.alpha_2 not in country_to_pages:
                         country_to_pages[country.alpha_2] = []
-                        start = match.start() - 100
-                        end = match.end() + 100
-                        if start < 0:
-                            start = 0
-                        if end > len(page_text) - 1:
-                            end = len(page_text)
+                    start = match.start() - 100
+                    end = match.end() + 100
+                    if start < 0:
+                        start = 0
+                    if end > len(page_text) - 1:
+                        end = len(page_text)
 
-                        if country.flag + country.name not in contexts:
-                            contexts[country.flag + country.name] = ""
-                        contexts[country.flag + country.name] = (
-                                contexts[country.flag + country.name] + " " + f"Page {page_no + 1}: " + re.sub(
-                            r'\w+$', '',
-                            re.sub(r'^\w+', '',
-                                   page_text[
-                                   start:end])).strip()).strip()
+                    if country.flag + country.name not in contexts:
+                        contexts[country.flag + country.name] = ""
+                    contexts[country.flag + country.name] = (
+                            contexts[country.flag + country.name] + " " + f"Page {page_no + 1}: " + re.sub(
+                        r'\w+$', '',
+                        re.sub(r'^\w+', '',
+                               page_text[
+                               start:end])).strip()).strip()
                     country_to_pages[country.alpha_2].append(page_no)
 
             international_matches = list(international_regex.finditer(page_text))
