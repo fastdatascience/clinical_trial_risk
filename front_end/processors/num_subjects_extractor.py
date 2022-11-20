@@ -103,12 +103,13 @@ for feature_name, feature_patterns in patterns.items():
 
 # Exclude things that are clearly not sample size, e.g. 50 ml
 negative_matcher = Matcher(nlp.vocab)
-patterns.append([{"LIKE_NUM": True}, {"LOWER": {
+negative_patterns = []
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
     "IN": ["mg", "kg", "ml", "l", "g", "kg", "mg", "s", "days", "months", "years", "hours", "seconds", "minutes", "sec",
            "min",
            "mol", "mmol", "mi", "h", "s", "m", "km", "lb", "oz", "moles", "mole", "wk", "wks", "week", "weeks",
-           "lot"]}}])
-negative_matcher.add("MASK", patterns)
+           "lot", "cells", "appointments"]}}])
+negative_matcher.add("MASK", negative_patterns)
 
 
 def extract_features(tokenised_pages: list):
@@ -130,12 +131,13 @@ def extract_features(tokenised_pages: list):
     tokens_to_exclude = set()
     negative_matches = negative_matcher(doc)
     for phrase_match in negative_matches:
-        tokens_to_exclude.add(phrase_match[1])
-        tokens_to_exclude.add(phrase_match[2])
+        for i in range(phrase_match[1], phrase_match[2] + 1):
+            tokens_to_exclude.add(i)
 
     for phrase_match in matches:
 
         if phrase_match[1] in tokens_to_exclude or phrase_match[2] in tokens_to_exclude:
+            print ("skipping match at", tokens[phrase_match[1]], tokens[phrase_match[2]])
             continue
 
         value = None
