@@ -106,7 +106,7 @@ negative_matcher = Matcher(nlp.vocab)
 negative_patterns = []
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
     "IN": ["mg", "kg", "ml", "l", "g", "kg", "mg", "s", "days", "months", "years", "hours", "seconds", "minutes", "sec",
-           "min",
+           "min", "mcg",
            "mol", "mmol", "mi", "h", "s", "m", "km", "lb", "oz", "moles", "mole", "wk", "wks", "week", "weeks",
            "lot", "cells", "appointments"]}}])
 negative_matcher.add("MASK", negative_patterns)

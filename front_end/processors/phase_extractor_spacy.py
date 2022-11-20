@@ -4,7 +4,7 @@ import spacy
 import re
 
 phase_map = {'Early Phase 1':0.5,
- 'Not Applicable':0,
+ # 'Not Applicable':0,
  'Phase 1':1,
  'Phase 1/Phase 2':1.5,
  'Phase 2':2,
