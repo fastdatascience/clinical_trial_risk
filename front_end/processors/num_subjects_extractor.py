@@ -137,7 +137,7 @@ def extract_features(tokenised_pages: list):
     for phrase_match in matches:
 
         if phrase_match[1] in tokens_to_exclude or phrase_match[2] in tokens_to_exclude:
-            print ("skipping match at", tokens[phrase_match[1]], tokens[phrase_match[2]])
+            # print ("skipping match at", tokens[phrase_match[1]], tokens[phrase_match[2]])
             continue
 
         value = None
