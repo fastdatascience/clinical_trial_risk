@@ -35,14 +35,19 @@ VALID_USERNAME_PASSWORD_PAIRS = {
 }
 
 word_cloud_generator = WordCloudGenerator("models/idfs_for_word_cloud.pkl.bz2")
-master_processor = MasterProcessor("models/condition_classifier.pkl.bz2", "models/phase_rf_classifier.pkl.bz2",
+master_processor = MasterProcessor("models/condition_classifier.pkl.bz2",
+                                   "models/phase_rf_classifier.pkl.bz2",
                                    "models/spacy-textcat-phase-04-model-best",
+                                    "models/sap_classifier_document_level.pkl.bz2",
                                    "models/sap_classifier.pkl.bz2",
                                    "models/effect_estimate_classifier.pkl.bz2",
                                    "models/num_subjects_classifier.pkl.bz2",
+                                   "models/subjects_classifier_document_level.pkl.bz2",
+                                    "models/arms_classifier_document_level.pkl.bz2",
+                                 "models/spacy-textcat-arms-21-model-best",
                                    "models/spacy-textcat-international-11-model-best",
-                                   "models/simulation_classifier.pkl.bz2",
-                                   "models/phase_arm_num_subjects_model_11_keras.keras", )
+                                   "models/spacy-textcat-country-16-model-best",
+                                   "models/simulation_classifier.pkl.bz2")
 
 dash_app = dash.Dash(
     __name__, meta_tags=[{"name": "viewport", "content": "width=device-width"},

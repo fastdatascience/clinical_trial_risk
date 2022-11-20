@@ -312,14 +312,14 @@ rows.append(
                                 className="tooltiptext"
                             )
                         ],
-                        className="tooltip",style={"width": "100%"}
+                        className="tooltip", style={"width": "100%"}
 
                     ),
 
                     html.Span(
                         [
                             html.P(["Trial phase ",
-                                    html.A(html.Sup("explain"), id="explain_phase", style={"font-size": "smaller"})],
+                                    html.A(html.Sup("explain"), id="explain_phase")],
                                    className="control_label"),
                             dcc.Dropdown(
                                 id="phase",
@@ -333,7 +333,7 @@ rows.append(
                                 className="tooltiptext"
                             )
                         ],
-                        className="tooltip",style={"width": "100%"}
+                        className="tooltip", style={"width": "100%"}
                     ),
                     html.Span(
                         [
@@ -378,7 +378,7 @@ rows.append(
 
                     html.Span(
                         [
-                            html.P(["Number of subjects ", html.Span("", id="subjects_traffic_light"), " ",
+                            html.P(["Number of subjects ", html.Span("", id="subjects_traffic_light"), " ⚠️",
                                     html.A(html.Sup("explain"), id="explain_num_subjects",
                                            )],
                                    className="control_label"),
@@ -395,7 +395,10 @@ rows.append(
                                            )
                                     ], className="control_label"),
                             html.Span(
-                                "The AI attempted to extract the sample size from the protocol. Trials with an adequate sample size are more likely to be informative. Sample sizes are converted from raw numbers to a tertile (0, 1, 2) indicating a small, medium or large trial for this phase and pathology. Click 'explain' to find out which words on which pages led the AI to this decision.",
+                                dcc.Markdown(
+                                    """Please note that the number of subjects is extracted with low confidence. You are advised to check this in the document.
+                                    
+                                    The AI attempted to extract the sample size from the protocol. Trials with an adequate sample size are more likely to be informative. Sample sizes are converted from raw numbers to a tertile (0, 1, 2) indicating a small, medium or large trial for this phase and pathology. Click 'explain' to find out which words on which pages led the AI to this decision."""),
                                 className="tooltiptext"
                             )
                         ],

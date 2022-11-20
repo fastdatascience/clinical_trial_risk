@@ -63,7 +63,7 @@ class NumArmsExtractor:
                 num_arms_to_pages[matching_span].append(page_number)
 
                 text = matching_span.text.lower()
-                sentence = doc[max(0, start - 5):min(len(doc), end + 5)].text
+                sentence = doc[max(0, start - 15):min(len(doc), end + 15)].text
                 if text not in context:
                     context[text] = ""
                 context[text] = (context[text] + " " + f"Page {page_number + 1}: " + sentence).strip()
@@ -80,6 +80,8 @@ class NumArmsExtractor:
                     break
         if prediction is not None and prediction > 5:
             prediction = 5
+        if prediction is not None:
+            prediction = int(prediction)
 
         num_arms_text_to_pages = {}
         for phrase, value in num_arms_to_pages:

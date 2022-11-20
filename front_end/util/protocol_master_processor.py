@@ -1,22 +1,25 @@
-import json
 import re
 import traceback
 
 import numpy as np
 
 from processors.condition_extractor import ConditionExtractor
-from processors.country_extractor import CountryExtractor
+from processors.country_extractor import CountryExtractor, allowed_countries
+from processors.country_group_extractor import CountryGroupExtractor
 from processors.duration_extractor import DurationExtractor
 from processors.effect_estimate_extractor import EffectEstimateExtractor
 from processors.international_extractor_spacy import InternationalExtractorSpacy
 from processors.num_arms_extractor import NumArmsExtractor
+from processors.num_arms_extractor_naive_bayes import NumArmsExtractorNaiveBayes
+from processors.num_arms_extractor_spacy import NumArmsExtractorSpacy
 from processors.num_endpoints_extractor import NumEndpointsExtractor
 from processors.num_sites_extractor import NumSitesExtractor
 from processors.num_subjects_extractor import NumSubjectsExtractor
-from processors.phase_arms_subjects_sap_extractor_keras import PhaseArmsSubjectsSAPMultiExtractorKeras
+from processors.num_subjects_extractor_naive_bayes import NumSubjectsExtractorNaiveBayes
 from processors.phase_extractor import PhaseExtractor
 from processors.phase_extractor_spacy import PhaseExtractorSpacy
 from processors.sap_extractor import SapExtractor
+from processors.sap_extractor_document_level_naive_bayes import SapExtractorDocumentLevel
 from processors.simulation_extractor import SimulationExtractor
 from util import page_tokeniser
 
@@ -25,25 +28,32 @@ is_number_regex = re.compile(r'^\d+,?\d+$')
 
 class MasterProcessor:
 
-    def __init__(self, condition_extractor_model_file: str,phase_extractor_model_file:str,  phase_extractor_model_file_spacy: str, sap_extractor_model_file: str,
+    def __init__(self, condition_extractor_model_file: str, phase_extractor_model_file: str,
+                 phase_extractor_model_file_spacy: str, sap_extractor_model_file_document_level: str,
+                 sap_extractor_model_file: str,
                  effect_estimator_extractor_model_file: str, num_subjects_extractor_model_file: str,
-                 international_extractor_model_file: str, simulation_extractor_model_file: str,
-                 phase_arms_subjects_sap_multi_extractor_file: str):
+                 num_subjects_extractor_nb_model_file: str,
+                 num_arms_extractor_model_file: str, num_arms_extractor_model_file_spacy: str,
+                 international_extractor_model_file: str, country_group_extractor_model_file: str,
+                 simulation_extractor_model_file: str):
         self.condition_extractor = ConditionExtractor(condition_extractor_model_file)
         self.phase_extractor = PhaseExtractor(phase_extractor_model_file)
         self.phase_extractor_spacy = PhaseExtractorSpacy(phase_extractor_model_file_spacy)
+        self.sap_extractor_document_level = SapExtractorDocumentLevel(sap_extractor_model_file_document_level)
         self.sap_extractor = SapExtractor(sap_extractor_model_file)
         self.effect_estimate_extractor = EffectEstimateExtractor(effect_estimator_extractor_model_file)
         self.duration_extractor = DurationExtractor()
         self.num_endpoints_extractor = NumEndpointsExtractor()
         self.num_sites_extractor = NumSitesExtractor()
         self.num_subjects_extractor = NumSubjectsExtractor(num_subjects_extractor_model_file)
+        self.num_subjects_extractor_nb = NumSubjectsExtractorNaiveBayes(num_subjects_extractor_nb_model_file)
+        self.num_arms_extractor_nb = NumArmsExtractorNaiveBayes(num_arms_extractor_model_file)
+        self.num_arms_extractor_spacy = NumArmsExtractorSpacy(num_arms_extractor_model_file_spacy)
         self.num_arms_extractor = NumArmsExtractor()
         self.country_extractor = CountryExtractor()
+        self.country_group_extractor = CountryGroupExtractor(country_group_extractor_model_file)
         self.international_extractor = InternationalExtractorSpacy(international_extractor_model_file)
         self.simulation_extractor = SimulationExtractor(simulation_extractor_model_file)
-        self.spacy_phase_arms_subjects_sap_multi_extractor = PhaseArmsSubjectsSAPMultiExtractorKeras(
-            phase_arms_subjects_sap_multi_extractor_file)
 
     def process_protocol(self, pages: list, report_progress=print, disable: set = {}) -> tuple:
         """
@@ -104,7 +114,8 @@ class MasterProcessor:
                     if orig_score is not None:
                         combined_scores[phase] = np.mean([float(score), float(orig_score)])
                 if len(combined_scores) > 0:
-                    phase_to_pages["prediction"] = float(re.sub(r'Phase ', '', max(combined_scores, key=combined_scores.get)))
+                    phase_to_pages["prediction"] = float(
+                        re.sub(r'Phase ', '', max(combined_scores, key=combined_scores.get)))
             except:
                 report_progress("Error running neural network model.\n")
 
@@ -122,6 +133,16 @@ class MasterProcessor:
                         "The machine learning model which detects SAPs was not loaded.\n")
                 else:
                     report_progress("It does not look like the protocol contains a statistical analysis plan.\n")
+
+                report_progress(
+                    "Testing top pages for SAP with document level SAP Naive Bayes model to refine SAP prediction.\n")
+                sap_to_pages_document_level = self.sap_extractor_document_level.process(tokenised_pages)
+                report_progress(
+                    "Document level Naive Bayes model found SAP score " + str(
+                        sap_to_pages_document_level["prediction"]) + " with score " + str(
+                        sap_to_pages_document_level["score"]) + ".\n")
+                sap_to_pages["prediction"] = sap_to_pages_document_level["prediction"]
+                sap_to_pages["score"] = sap_to_pages_document_level["score"]
             except:
                 print(traceback.format_exc())
                 report_progress("The tool was unable to identify an SAP. An error occurred.\n")
@@ -145,31 +166,86 @@ class MasterProcessor:
                 effect_estimate_to_pages = {"prediction": 0}
                 print(traceback.format_exc())
 
-        if "num_subjects" in disable:
-            num_subjects_to_pages = {"prediction": 0}
+        if "num_arms" in disable:
+            num_arms_to_pages = {"prediction": 0}
         else:
-            report_progress("Searching for a number of subjects...")
             try:
-                num_subjects_to_pages = self.num_subjects_extractor.process(tokenised_pages)
-                report_progress(f"It looks like the trial has {num_subjects_to_pages['prediction']} participants.\n")
+                num_arms_to_pages_nb = self.num_arms_extractor_nb.process(tokenised_pages)
+                report_progress(f"Naive Bayes arms prediction probabilities: {num_arms_to_pages_nb['proba']}.\n")
             except:
-                report_progress("Error extracting number of subjects!\n")
-                num_subjects_to_pages = {"prediction": 0}
+                report_progress("Error extracting number of arms!\n")
+                num_arms_to_pages_nb = {"prediction": "2"}
                 print(traceback.format_exc())
 
-        if "num_arms" in disable:
-            num_subjects_to_pages = {"prediction": 0}
-        else:
+            try:
+                num_arms_to_pages_spacy = self.num_arms_extractor_spacy.process(tokenised_pages)
+                report_progress(f"Spacy arms prediction probabilities: {num_arms_to_pages_spacy['proba']}.\n")
+            except:
+                report_progress("Error extracting number of arms!\n")
+                num_arms_to_pages_spacy = {"prediction": "2"}
+                print(traceback.format_exc())
+
+            combined_arms_probabilities = {}
+            for num_arms in ["1", "2", "3+"]:
+                combined_arms_probabilities[num_arms] = (num_arms_to_pages_spacy["proba"][num_arms] +
+                                                         num_arms_to_pages_nb["proba"][num_arms]) / 2
+            most_likely_arms = max(combined_arms_probabilities, key=combined_arms_probabilities.get)
+
             report_progress("Searching for a number of arms...")
             try:
                 num_arms_to_pages = self.num_arms_extractor.process(tokenised_pages)
                 if num_arms_to_pages['prediction'] is not None:
                     report_progress(f"It looks like the trial has {num_arms_to_pages['prediction']} arm(s).\n")
+
+                    if most_likely_arms in ("1", "2") and num_arms_to_pages['prediction'] == int(
+                            re.sub(r'\+', '', num_arms_to_pages_nb["prediction"])):
+                        report_progress("The NB prediction and the rule based prediction match!")
+                    elif most_likely_arms == "3+" and num_arms_to_pages['prediction'] >= 3:
+                        report_progress("The NB prediction and the rule based prediction match by range!")
                 else:
                     report_progress(f"No explicit mention of arms found.\n")
+                    num_arms_to_pages["prediction"] = int(re.sub(r'\+', '', most_likely_arms))
             except:
                 report_progress("Error extracting number of arms!\n")
                 num_arms_to_pages = {"prediction": 0}
+                print(traceback.format_exc())
+
+            num_arms_to_pages["pages"] = num_arms_to_pages["pages"] | num_arms_to_pages_nb["pages"]
+
+        if "num_subjects" in disable:
+            num_subjects_to_pages = {"prediction": 0}
+        else:
+            report_progress("Running Naive Bayes classifier for number of subjects...")
+            num_subjects_to_pages_nb = self.num_subjects_extractor_nb.process(tokenised_pages)
+
+            report_progress("Searching for a number of subjects...")
+            try:
+                num_subjects_to_pages = self.num_subjects_extractor.process(tokenised_pages)
+                report_progress(f"It looks like the trial has {num_subjects_to_pages['prediction']} participants.\n")
+
+                '''
+                # This part is actually reducing the accuracy
+                def get_num_subjects_clean(num):
+                    if num >= 134:
+                        return "134+"
+                    if num >= 34:
+                        return "34-133"
+                    return "1-33"
+
+                combined_probas = {}
+                for i, p in num_subjects_to_pages["proba"].items():
+                    # Multiply by number of arms if applicable
+                    if i in num_subjects_to_pages["is_per_arm"]:
+                        i *= num_arms_to_pages["prediction"]
+                    cat = get_num_subjects_clean(int(i))
+                    combined_probas[i] = (p + num_subjects_to_pages_nb["proba"][cat]) / 2
+
+                num_subjects_to_pages["proba"] = combined_probas
+                num_subjects_to_pages["prediction"] = max(combined_probas, key=combined_probas.get)
+                '''
+            except:
+                report_progress("Error extracting number of subjects!\n")
+                num_subjects_to_pages = {"prediction": 0}
                 print(traceback.format_exc())
 
         if "country" in disable:
@@ -187,24 +263,41 @@ class MasterProcessor:
                 report_progress(
                     f"It looks like the trial takes place in {len(country_to_pages['prediction'])} {country_ies}: {','.join(country_to_pages['prediction'])}\n")
 
+            country_group_to_pages = self.country_group_extractor.process(tokenised_pages)
+
+            report_progress(
+                f"Neural network found that trial country is likely to be {country_group_to_pages['prediction']}.\n")
+
+            if country_group_to_pages["prediction"] == "USCA":
+                report_progress(
+                    f"Neural network found that trial is likely to be US/Canada only.\n")
+                if len(country_to_pages["prediction"]) > 1:
+                    country_to_pages["prediction"] = [c for c in country_to_pages["prediction"] if c in ("US", "CA")]
+                    report_progress(
+                        f"Overriding countries found. Setting to. " + str(country_to_pages["prediction"]) + ".\n")
+
             is_international_to_pages = self.international_extractor.process(tokenised_pages)
 
             if is_international_to_pages["prediction"] == 0:
                 report_progress(
-                    f"Neural network found that trial is likely to be a single-country trial.")
+                    f"Neural network found that trial is likely to be a single-country trial.\n")
                 if len(country_to_pages["prediction"]) > 1:
                     report_progress(
-                        f"Overriding countries found. Taking the highest-scoring country.")
+                        f"Overriding countries found. Taking the highest-scoring country.\n")
                     country_to_pages["prediction"] = country_to_pages["prediction"][:1]
             else:
                 report_progress(
-                    f"Neural network found that trial is likely to be international.")
-                if len(country_to_pages["prediction"]) <= 1:
-                    report_progress(
-                        f"Overriding countries found. Taking all countries.")
-                    country_to_pages["prediction"] = list(sorted(country_to_pages["pages"]))
-                if len(country_to_pages["prediction"]) <= 1:
-                    country_to_pages["prediction"].append("XX")
+                    f"Neural network found that trial is likely to be international.\n")
+                if country_group_to_pages["prediction"] != "USCA":
+                    if len(country_to_pages["prediction"]) <= 1:
+                        report_progress(
+                            f"Overriding countries found. Taking all countries.\n")
+                        country_to_pages["prediction"] = list(sorted(country_to_pages["pages"]))
+                    if country_group_to_pages["prediction"] == "HIGH INCOME":
+                        country_to_pages["prediction"] = list(
+                            [x for x in sorted(country_to_pages["pages"]) if x not in allowed_countries])
+                    if len(country_to_pages["prediction"]) <= 1:
+                        country_to_pages["prediction"].append("XX")
 
         if "simulation" in disable:
             simulation_to_pages = {"prediction": -1}
@@ -218,72 +311,6 @@ class MasterProcessor:
                     "The machine learning model which detects the simulation_to_pages was not loaded.\n")
             else:
                 report_progress("It does not look like the authors used simulation for sample size.\n")
-
-        '''
-        if "multi" not in disable:
-            # Override or modify some of the predictions of the earlier rule-based components.
-            # This is using a neural network model which does a lot of heavy lifting but which is computationally expensive.
-            report_progress("Running neural network multi-label model to refine predictions...\n")
-            try:
-                multi_to_pages = self.spacy_phase_arms_subjects_sap_multi_extractor.process(tokenised_pages)
-                report_progress("Neural network model output is " + json.dumps(multi_to_pages["prediction"]) + ".\n")
-
-                report_progress("Phase is likely to be: " + str(multi_to_pages["prediction"][0]) + ".\n")
-                phase_to_pages["prediction"] = multi_to_pages["prediction"][0]
-                phase_to_pages["pages"] = phase_to_pages["pages"] | multi_to_pages["pages"][0]
-
-                report_progress("Number of arms is likely to be: " + str(multi_to_pages["prediction"][1]) + ".\n")
-                num_arms_to_pages["prediction"] = multi_to_pages["prediction"][1]
-                num_arms_to_pages["pages"] = num_arms_to_pages["pages"] | multi_to_pages["pages"][1]
-
-                report_progress("Number of subjects is likely in range: " + multi_to_pages["prediction"][2] + ".\n")
-                num_subjects_range_str = multi_to_pages["prediction"][2]
-                num_subjects_to_pages["pages"] = num_subjects_to_pages["pages"] | multi_to_pages["pages"][2]
-                num_subjects_to_pages["comment"] = num_subjects_to_pages["comment"] + " / " + multi_to_pages["comment"][2]
-
-                sap_to_pages["prediction"] = multi_to_pages["prediction"][3]
-                sap_to_pages["pages"] = sap_to_pages["pages"] | multi_to_pages["pages"][3]
-
-                # Logic to put number of subjects in correct range
-                num_subjects_range = num_subjects_range_str.split("-")
-                num_subjects_range_lower = int(num_subjects_range[0])
-                num_subjects_range_upper = None
-                if num_subjects_range[1] != "":
-                    num_subjects_range_upper = int(num_subjects_range[1])
-                if num_subjects_to_pages["prediction"] >= num_subjects_range_lower and (
-                        num_subjects_range_upper is None or num_subjects_to_pages[
-                    "prediction"] <= num_subjects_range_upper):
-                    report_progress(
-                        f"Num subjects {num_subjects_to_pages['prediction']} is already within acceptable range {num_subjects_range_str}. No change needed.\n")
-                else:
-                    report_progress(
-                        f"Num subjects {num_subjects_to_pages['prediction']} is not already within acceptable range {num_subjects_range_str}. Updating.\n")
-                    is_found_new_num_subjects = False
-                    for i in num_subjects_to_pages["pages"]:
-                        if is_number_regex.match(i) and int(i) >= num_subjects_range_lower and (
-                                num_subjects_range_upper is None or int(i) <= num_subjects_range_upper):
-                            report_progress(f"Overriding with {i}")
-                            num_subjects_to_pages['prediction'] = i
-                            is_found_new_num_subjects = True
-                            break
-                    if not is_found_new_num_subjects:
-                        if num_subjects_range_upper is not None:
-                            mid_point_of_range = np.mean([num_subjects_range_lower, num_subjects_range_upper])
-                        else:
-                            mid_point_of_range = num_subjects_range_lower
-                        report_progress(f"Mid point of the range of probable sample sizes is {mid_point_of_range}. Looking for the number occurring in the text which is closest to this midpoint.")
-                        candidates = set()
-                        for i in num_subjects_to_pages["pages"]:
-                            if is_number_regex.match(i):
-                                candidates.add(int(i))
-                        if len(candidates) > 0:
-                            num_subjects_to_pages['prediction'] = min(candidates, key = lambda i : abs(i - mid_point_of_range))
-                            report_progress(f"Overridden with {num_subjects_to_pages['prediction']}")
-
-            except:
-                report_progress("Error running Spacy multi-label model!\n")
-                print(traceback.format_exc())
-        '''
 
         return tokenised_pages, condition_to_pages, phase_to_pages, sap_to_pages, \
                effect_estimate_to_pages, num_subjects_to_pages, num_arms_to_pages, country_to_pages, simulation_to_pages

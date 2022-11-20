@@ -76,6 +76,7 @@ matcher = Matcher(nlp.vocab)
 num_regex = re.compile(r'^[1-9]\d*,?\d+$')
 
 ABSOLUTE_MINIMUM = 35
+ABSOLUTE_MAXIMUM = 10000
 
 for feature_name, feature_patterns in patterns.items():
     patterns = []
@@ -100,6 +101,15 @@ for feature_name, feature_patterns in patterns.items():
             patterns.append(pattern)
     matcher.add(feature_name, patterns)
 
+# Exclude things that are clearly not sample size, e.g. 50 ml
+negative_matcher = Matcher(nlp.vocab)
+patterns.append([{"LIKE_NUM": True}, {"LOWER": {
+    "IN": ["mg", "kg", "ml", "l", "g", "kg", "mg", "s", "days", "months", "years", "hours", "seconds", "minutes", "sec",
+           "min",
+           "mol", "mmol", "mi", "h", "s", "m", "km", "lb", "oz", "moles", "mole", "wk", "wks", "week", "weeks",
+           "lot"]}}])
+negative_matcher.add("MASK", patterns)
+
 
 def extract_features(tokenised_pages: list):
     features = {}
@@ -117,7 +127,16 @@ def extract_features(tokenised_pages: list):
 
     token_indexes = {}
 
+    tokens_to_exclude = set()
+    negative_matches = negative_matcher(doc)
+    for phrase_match in negative_matches:
+        tokens_to_exclude.add(phrase_match[1])
+        tokens_to_exclude.add(phrase_match[2])
+
     for phrase_match in matches:
+
+        if phrase_match[1] in tokens_to_exclude or phrase_match[2] in tokens_to_exclude:
+            continue
 
         value = None
         matcher_name = nlp.vocab.strings[phrase_match[0]]
@@ -154,7 +173,7 @@ def extract_features(tokenised_pages: list):
             end = min(len(tokens) - 1, phrase_match[2] + 15)
 
             contexts[value] = (
-                        contexts[value] + " " + f"Page {page_no + 1}: " + " ".join(tokens[start:end])).strip()
+                    contexts[value] + " " + f"Page {page_no + 1}: " + " ".join(tokens[start:end])).strip()
 
     for candidate in features:
         for distance_feature in patterns_without_number:
@@ -171,7 +190,7 @@ def extract_features(tokenised_pages: list):
     candidates = []
     feature_vectors = []
     for cand, features in features.items():
-        if features["magnitude"] < ABSOLUTE_MINIMUM:
+        if features["magnitude"] < ABSOLUTE_MINIMUM or features["magnitude"] > ABSOLUTE_MAXIMUM:
             continue
         feature_vector = []
         for feature_name in FEATURE_NAMES:
@@ -209,7 +228,7 @@ class NumSubjectsExtractor:
 
         if len(df_instances) == 0:
             return {"prediction": 0, "pages": {}, "context": [],
-                    "score": 0, "comment": "No possible subject numbers found."}
+                    "score": 0, "comment": "No possible subject numbers found.", "proba": {}, "is_per_arm": {}}
 
         probas = self.model.predict_proba(df_instances[FEATURE_NAMES])[:, 1]
         winning_index = np.argmax(probas)
@@ -219,10 +238,12 @@ class NumSubjectsExtractor:
         if len(top_indices) > 5:
             top_indices = top_indices[:5]
 
+        value_to_score = {}
         possible_candidates = []
         for idx in top_indices:
             if probas[idx] > score * 0.1 and len(possible_candidates) < 3:
                 possible_candidates.append(df_instances.candidate.iloc[idx])
+                value_to_score[df_instances.candidate.iloc[idx]] = probas[idx]
         possible_candidates = "Possible sample sizes found: " + ", ".join(possible_candidates)
 
         num_subjects = df_instances.candidate.iloc[winning_index]
@@ -237,5 +258,10 @@ class NumSubjectsExtractor:
             if k not in top_values:
                 del contexts[k]
 
+        is_per_arm = []
+        for k, v in contexts.items():
+            if "per arm" in v:
+                is_per_arm.append(k)
+
         return {"prediction": int(num_subjects), "pages": num_subjects_to_pages, "context": contexts, "score": score,
-                "comment": possible_candidates}
+                "comment": possible_candidates, "is_per_arm": is_per_arm, "proba": value_to_score}
