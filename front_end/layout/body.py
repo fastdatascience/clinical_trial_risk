@@ -200,8 +200,8 @@ rows.append(
                         className="dcc_control",
                         style=dataset_selector_style
                     ),
-                    html.A(children=[html.Span("Click to view PDF"), html.Br()], target="ctgov", style={"display":"none"}, id="original_file_link"),
-                    html.Span("or", style={"align":"center"}),
+                    html.A(children=[html.P("Click to view PDF", className="control_label")], target="ctgov", style={"display":"none"}, id="original_file_link"),
+                    html.P("or", style={"align":"center"}, className="control_label"),
                     dcc.Upload(id='upload-data',
                                children=html.Div([
                                    'Drag and Drop Protocol PDF', html.Br(), ' or ', html.Br(),

@@ -1,13 +1,16 @@
+import json
 import re
 import traceback
 
 import numpy as np
 
 from processors.condition_extractor import ConditionExtractor
-from processors.country_extractor import CountryExtractor, allowed_countries
+from processors.country_ensemble_extractor import CountryEnsembleExtractor
+from processors.country_extractor import CountryExtractor
 from processors.country_group_extractor import CountryGroupExtractor
 from processors.duration_extractor import DurationExtractor
 from processors.effect_estimate_extractor import EffectEstimateExtractor
+from processors.international_extractor_naive_bayes import InternationalExtractorNaiveBayes
 from processors.international_extractor_spacy import InternationalExtractorSpacy
 from processors.num_arms_extractor import NumArmsExtractor
 from processors.num_arms_extractor_naive_bayes import NumArmsExtractorNaiveBayes
@@ -34,6 +37,7 @@ class MasterProcessor:
                  num_subjects_extractor_nb_model_file: str,
                  num_arms_extractor_model_file: str, num_arms_extractor_model_file_spacy: str,
                  international_extractor_model_file: str, country_group_extractor_model_file: str,
+                 international_extractor_model_file_nb: str, country_ensemble_extractor_model_file: str,
                  simulation_extractor_model_file: str):
         self.condition_extractor = ConditionExtractor(condition_extractor_model_file)
         self.phase_extractor = PhaseExtractorRuleBased(phase_extractor_model_file)
@@ -52,6 +56,8 @@ class MasterProcessor:
         self.country_extractor = CountryExtractor()
         self.country_group_extractor = CountryGroupExtractor(country_group_extractor_model_file)
         self.international_extractor = InternationalExtractorSpacy(international_extractor_model_file)
+        self.international_extractor_nb = InternationalExtractorNaiveBayes(international_extractor_model_file_nb)
+        self.country_ensemble_extractor = CountryEnsembleExtractor(country_ensemble_extractor_model_file)
         self.simulation_extractor = SimulationExtractor(simulation_extractor_model_file)
 
     def process_protocol(self, pages: list, report_progress=print, disable: set = {}) -> tuple:
@@ -283,36 +289,24 @@ class MasterProcessor:
             report_progress(
                 f"Neural network found that trial country is likely to be {country_group_to_pages['prediction']}.\n")
 
-            if country_group_to_pages["prediction"] == "USCA":
-                report_progress(
-                    f"Neural network found that trial is likely to be US/Canada only.\n")
-                if len(country_to_pages["prediction"]) > 1:
-                    country_to_pages["prediction"] = [c for c in country_to_pages["prediction"] if c in ("US", "CA")]
-                    report_progress(
-                        f"Overriding countries found. Setting to. " + str(country_to_pages["prediction"]) + ".\n")
-
             is_international_to_pages = self.international_extractor.process(tokenised_pages)
 
-            if is_international_to_pages["prediction"] == 0:
-                report_progress(
-                    f"Neural network found that trial is likely to be a single-country trial.\n")
-                if len(country_to_pages["prediction"]) > 1:
-                    report_progress(
-                        f"Overriding countries found. Taking the highest-scoring country.\n")
-                    country_to_pages["prediction"] = country_to_pages["prediction"][:1]
-            else:
-                report_progress(
-                    f"Neural network found that trial is likely to be international.\n")
-                if country_group_to_pages["prediction"] != "USCA":
-                    if len(country_to_pages["prediction"]) <= 1:
-                        report_progress(
-                            f"Overriding countries found. Taking all countries.\n")
-                        country_to_pages["prediction"] = list(sorted(country_to_pages["pages"]))
-                    if country_group_to_pages["prediction"] == "HIGH INCOME":
-                        country_to_pages["prediction"] = list(
-                            [x for x in sorted(country_to_pages["pages"]) if x not in allowed_countries])
-                    if len(country_to_pages["prediction"]) <= 1:
-                        country_to_pages["prediction"].append("XX")
+            report_progress(
+                f"Neural network for is trial international? output: {is_international_to_pages['prediction']}.\n")
+
+            is_international_nb_to_pages = self.international_extractor_nb.process(tokenised_pages)
+
+            report_progress(
+                f"Naive Bayes model for is trial international? output: {is_international_nb_to_pages['prediction']}.\n")
+
+            ensemble_to_pages = self.country_ensemble_extractor.process(country_to_pages["features"],
+                                                                        country_group_to_pages["probas"],
+                                                                        is_international_to_pages["probas"],
+                                                                        is_international_nb_to_pages["score"])
+
+            report_progress(f"Ensemble model output: {json.dumps(ensemble_to_pages)}\n")
+
+            country_to_pages["prediction"] = ensemble_to_pages["prediction"]
 
         if "simulation" in disable:
             simulation_to_pages = {"prediction": -1}

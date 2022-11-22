@@ -27,7 +27,7 @@ WINDOW_SIZE = 20
 def transform_tokens(list_of_lists_of_tokens, vectoriser):
     token_counts = np.zeros((len(list_of_lists_of_tokens), len(vectoriser.vocabulary_)))
     for doc_no in range(len(list_of_lists_of_tokens)):
-        for i in range(40):
+        for i in range(WINDOW_SIZE * 2):
             weight = WINDOW_SIZE + 1 - abs(i - WINDOW_SIZE)
             token_lower = list_of_lists_of_tokens[doc_no][i].lower()
             if token_lower in vectoriser.vocabulary_:
@@ -37,21 +37,24 @@ def transform_tokens(list_of_lists_of_tokens, vectoriser):
 
 def get_context(all_tokens, idx):
     context = []
-    if idx - WINDOW_SIZE < 0 or idx + WINDOW_SIZE > len(all_tokens):
-        return None
-    for j in range(idx - WINDOW_SIZE, idx + WINDOW_SIZE):
-        w = all_tokens[j][-1]
-        if w.endswith("%"):
-            w = "DIGITPERCENT"
-        elif NUMBERS_REGEX.match(w):
-            if "." in w:
-                w = "DECIMALNUMBER"
-            elif PURE_NUMBERS_REGEX.match(w):
-                w = f"{len(w)}DIGITS"
-            else:
-                w = "OTHERNUMBER"
-        elif w in NUMBERS_IN_WORDS:
-            w = "NUMBERWORD"
+    start = idx - WINDOW_SIZE
+    end = idx + WINDOW_SIZE
+    for j in range(start, end):
+        if j < 0 or j >= len(all_tokens):
+            w = "" # pad
+        else:
+            w = all_tokens[j][-1]
+            if w.endswith("%"):
+                w = "DIGITPERCENT"
+            elif NUMBERS_REGEX.match(w):
+                if "." in w:
+                    w = "DECIMALNUMBER"
+                elif PURE_NUMBERS_REGEX.match(w):
+                    w = f"{len(w)}DIGITS"
+                else:
+                    w = "OTHERNUMBER"
+            elif w in NUMBERS_IN_WORDS:
+                w = "NUMBERWORD"
         context.append(w)
     return context
 
@@ -140,6 +143,9 @@ class EffectEstimateExtractor:
             df_result = pd.DataFrame(
                 {"token_idx": token_idxs, "token": instances, "page_no": page_nos, "y_pred": y_pred,
                  "y_pred_proba": y_pred_proba})
+
+            # hack: make it more lenient because there were very few positive examples in the training set.
+            df_result["y_pred"] = df_result["y_pred_proba"] > 0.2
 
             top_score = df_result.y_pred_proba.max()
             page_to_max_proba = df_result.groupby("page_no")["y_pred"].max()
