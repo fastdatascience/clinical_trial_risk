@@ -15,8 +15,7 @@ from processors.num_arms_extractor_spacy import NumArmsExtractorSpacy
 from processors.num_endpoints_extractor import NumEndpointsExtractor
 from processors.num_sites_extractor import NumSitesExtractor
 from processors.num_subjects_extractor import NumSubjectsExtractor
-from processors.num_subjects_extractor_naive_bayes import NumSubjectsExtractorNaiveBayes
-from processors.phase_extractor import PhaseExtractor
+from processors.phase_extractor_rule_based import PhaseExtractorRuleBased
 from processors.phase_extractor_spacy import PhaseExtractorSpacy
 from processors.sap_extractor import SapExtractor
 from processors.sap_extractor_document_level_naive_bayes import SapExtractorDocumentLevel
@@ -37,7 +36,7 @@ class MasterProcessor:
                  international_extractor_model_file: str, country_group_extractor_model_file: str,
                  simulation_extractor_model_file: str):
         self.condition_extractor = ConditionExtractor(condition_extractor_model_file)
-        self.phase_extractor = PhaseExtractor(phase_extractor_model_file)
+        self.phase_extractor = PhaseExtractorRuleBased(phase_extractor_model_file)
         self.phase_extractor_spacy = PhaseExtractorSpacy(phase_extractor_model_file_spacy)
         self.sap_extractor_document_level = SapExtractorDocumentLevel(sap_extractor_model_file_document_level)
         self.sap_extractor = SapExtractor(sap_extractor_model_file)
@@ -46,7 +45,7 @@ class MasterProcessor:
         self.num_endpoints_extractor = NumEndpointsExtractor()
         self.num_sites_extractor = NumSitesExtractor()
         self.num_subjects_extractor = NumSubjectsExtractor(num_subjects_extractor_model_file)
-        self.num_subjects_extractor_nb = NumSubjectsExtractorNaiveBayes(num_subjects_extractor_nb_model_file)
+        # self.num_subjects_extractor_nb = NumSubjectsExtractorNaiveBayes(num_subjects_extractor_nb_model_file)
         self.num_arms_extractor_nb = NumArmsExtractorNaiveBayes(num_arms_extractor_model_file)
         self.num_arms_extractor_spacy = NumArmsExtractorSpacy(num_arms_extractor_model_file_spacy)
         self.num_arms_extractor = NumArmsExtractor()
@@ -109,15 +108,19 @@ class MasterProcessor:
                 report_progress(f"Neural network thought it was a Phase {phase_to_pages_spacy['prediction']} trial.\n")
 
                 combined_scores = {}
-                for phase, score in phase_to_pages_spacy["probas"].items():
-                    orig_score = phase_to_pages["probas"].get(phase)
-                    if orig_score is not None:
-                        combined_scores[phase] = np.mean([float(score), float(orig_score)])
-                if len(combined_scores) > 0:
-                    phase_to_pages["prediction"] = float(
-                        re.sub(r'Phase ', '', max(combined_scores, key=combined_scores.get)))
+                if len(phase_to_pages["probas"]) > 0:
+                    for phase, score in phase_to_pages["probas"].items():
+                        nn_score = phase_to_pages_spacy["probas"].get(phase)
+                        if nn_score is not None:
+                            combined_scores[phase] = np.mean([float(score), float(nn_score)])
+                else:
+                    combined_scores = phase_to_pages_spacy["probas"]
+                phase_to_pages["probas_corrected"] = combined_scores
+                phase_to_pages["prediction"] = float(
+                    re.sub(r'Phase ', '', max(combined_scores, key=combined_scores.get)))
             except:
                 report_progress("Error running neural network model.\n")
+                traceback.print_exc()
 
         if "sap" in disable:
             sap_to_pages = {"prediction": -1}
@@ -146,6 +149,7 @@ class MasterProcessor:
             except:
                 print(traceback.format_exc())
                 report_progress("The tool was unable to identify an SAP. An error occurred.\n")
+                traceback.print_exc()
                 sap_to_pages = {'prediction': 0}
 
         if "effect_estimate" in disable:
@@ -163,9 +167,11 @@ class MasterProcessor:
                     report_progress("It does not look like the protocol contains an effect estimate.\n")
             except:
                 report_progress("Error extracting effect estimate!\n")
+                traceback.print_exc()
                 effect_estimate_to_pages = {"prediction": 0}
                 print(traceback.format_exc())
 
+        most_likely_arms = None
         if "num_arms" in disable:
             num_arms_to_pages = {"prediction": 0}
         else:
@@ -207,6 +213,7 @@ class MasterProcessor:
                     num_arms_to_pages["prediction"] = int(re.sub(r'\+', '', most_likely_arms))
             except:
                 report_progress("Error extracting number of arms!\n")
+                traceback.print_exc()
                 num_arms_to_pages = {"prediction": 0}
                 print(traceback.format_exc())
 
@@ -216,11 +223,18 @@ class MasterProcessor:
             num_subjects_to_pages = {"prediction": 0}
         else:
             report_progress("Running Naive Bayes classifier for number of subjects...")
-            num_subjects_to_pages_nb = self.num_subjects_extractor_nb.process(tokenised_pages)
+            # num_subjects_to_pages_nb = self.num_subjects_extractor_nb.process(tokenised_pages)
 
             report_progress("Searching for a number of subjects...")
             try:
                 num_subjects_to_pages = self.num_subjects_extractor.process(tokenised_pages)
+
+                # Multiply by number of arms
+                if num_subjects_to_pages["prediction"] in num_subjects_to_pages["is_per_arm"] and most_likely_arms:
+                    report_progress(
+                        f"Multiply number of subjects by {most_likely_arms} because of number of arms.\n")
+                    num_subjects_to_pages["prediction"] = num_subjects_to_pages["prediction"] * most_likely_arms
+
                 report_progress(f"It looks like the trial has {num_subjects_to_pages['prediction']} participants.\n")
 
                 '''
@@ -244,6 +258,7 @@ class MasterProcessor:
                 num_subjects_to_pages["prediction"] = max(combined_probas, key=combined_probas.get)
                 '''
             except:
+                traceback.print_exc()
                 report_progress("Error extracting number of subjects!\n")
                 num_subjects_to_pages = {"prediction": 0}
                 print(traceback.format_exc())

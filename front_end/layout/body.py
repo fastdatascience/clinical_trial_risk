@@ -1,7 +1,8 @@
 import os
 import pickle as pkl
 import re
-
+import bz2
+import pickle as pkl
 import dash_core_components as dcc
 import dash_daq as daq
 import dash_html_components as html
@@ -21,21 +22,31 @@ input_folder = "../data/preprocessed_tika/"
 
 file_to_text = {}
 dataset_selector_style = None
-try:
-    if os.stat(input_folder):
-        for root, folder, files in os.walk(input_folder):
-            for file_name in files:
-                if not file_name.endswith("pkl"):
-                    continue
-                pdf_file = re.sub(".pkl", "", file_name)
 
-                full_file = input_folder + "/" + file_name
-                #         print (full_file)
-                with open(full_file, 'rb') as f:
-                    text = pkl.load(f)
-                file_to_text[pdf_file] = text
+try:
+    with bz2.open("demo_data/demo_protocols.pkl.bz2", "rb") as f:
+        file_to_text = pkl.load(f)
 except:
-    print("Could not find any preprocessed protocols")
+    print ("Error loading demo protocols")
+
+if False:
+    try:
+        if os.stat(input_folder):
+            for root, folder, files in os.walk(input_folder):
+                for file_name in files:
+                    if not file_name.endswith("pkl"):
+                        continue
+                    pdf_file = re.sub(".pkl", "", file_name)
+
+                    full_file = input_folder + "/" + file_name
+                    #         print (full_file)
+                    with open(full_file, 'rb') as f:
+                        text = pkl.load(f)
+                    file_to_text[pdf_file] = text
+    except:
+        print("Could not find any preprocessed protocols")
+
+if len(file_to_text) == 0:
     print("The protocol selector menu will be hidden.")
     dataset_selector_style = {"display": "none"}
 
@@ -189,6 +200,8 @@ rows.append(
                         className="dcc_control",
                         style=dataset_selector_style
                     ),
+                    html.A(children=[html.Span("Click to view PDF"), html.Br()], target="ctgov", style={"display":"none"}, id="original_file_link"),
+                    html.Span("or", style={"align":"center"}),
                     dcc.Upload(id='upload-data',
                                children=html.Div([
                                    'Drag and Drop Protocol PDF', html.Br(), ' or ', html.Br(),
@@ -378,16 +391,26 @@ rows.append(
 
                     html.Span(
                         [
-                            html.P(["Number of subjects ", html.Span("", id="subjects_traffic_light"), " ⚠️",
+                            html.P(["Number of subjects ", html.Span("", id="subjects_traffic_light"), " ",
+                                    html.Span("⚠ Low confidence!", id="is_num_subjects_low_confidence",
+                                              style={"display": "none"}),
                                     html.A(html.Sup("explain"), id="explain_num_subjects",
                                            )],
                                    className="control_label"),
+                            # dcc.Dropdown(
+                            #     id="num_subjects",
+                            #     multi=False,
+                            #     className="dcc_control",
+                            #     style={"width": "100%"},
+                            #     options={"label":"100","value":"100"}
+                            # ),
                             daq.NumericInput(
                                 id="num_subjects",
-                                value=100,
+                                value=None,
                                 min=10,
                                 max=100000,
                                 className="dcc_control",
+                                style={"width": "100%"},
                             ),
                             html.P("", id="num_subjects_explanation", className="control_label"),
                             html.P(["Sample size tertile: ", html.Span([], id="sample_size_tertile"), " ",
@@ -396,9 +419,7 @@ rows.append(
                                     ], className="control_label"),
                             html.Span(
                                 dcc.Markdown(
-                                    """Please note that the number of subjects is extracted with low confidence. You are advised to check this in the document.
-                                    
-                                    The AI attempted to extract the sample size from the protocol. Trials with an adequate sample size are more likely to be informative. Sample sizes are converted from raw numbers to a tertile (0, 1, 2) indicating a small, medium or large trial for this phase and pathology. Click 'explain' to find out which words on which pages led the AI to this decision."""),
+                                    """Please note that the number of subjects may have been extracted with low confidence. You are advised to check this in the document.\n\nThe AI attempted to extract the sample size from the protocol. Trials with an adequate sample size are more likely to be informative. Sample sizes are converted from raw numbers to a tertile (0, 1, 2) indicating a small, medium or large trial for this phase and pathology. Click 'explain' to find out which words on which pages led the AI to this decision."""),
                                 className="tooltiptext"
                             )
                         ],

@@ -1,16 +1,18 @@
+import re
 from os.path import exists
 
 import spacy
-import re
 
-phase_map = {'Early Phase 1':0.5,
- # 'Not Applicable':0,
- 'Phase 1':1,
- 'Phase 1/Phase 2':1.5,
- 'Phase 2':2,
- 'Phase 2/Phase 3':2.5,
- 'Phase 3':3,
- 'Phase 4':4}
+# TODO: exclusion pattern for recent, recently etc, within 5 words
+phase_map = {'Early Phase 1': 0.5,
+             'Not Applicable': 0,
+             'Phase 1': 1,
+             'Phase 1/Phase 2': 1.5,
+             'Phase 2': 2,
+             'Phase 2/Phase 3': 2.5,
+             'Phase 3': 3,
+             'Phase 4': 4}
+
 
 # Current best model: Expt4
 class PhaseExtractorSpacy:
@@ -44,9 +46,8 @@ class PhaseExtractorSpacy:
         prediction_proba = {}
         for phase_str, phase_float in phase_map.items():
             clean_name = "Phase " + str(phase_float)
+            clean_name = re.sub(r"\.0$", "", clean_name)
             prediction_proba[clean_name] = doc.cats[phase_str]
-
-
 
         prediction = max(prediction_proba, key=prediction_proba.get)
 

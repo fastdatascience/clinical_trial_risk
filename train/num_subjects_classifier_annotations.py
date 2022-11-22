@@ -67,11 +67,11 @@ annotations = {'HIV-HIV-2017-Bekker-HVTN100.pdf': '252',
                'PNE-Pneumonia-2019-Alexander-LEAP2.pdf': '738',
                'MAT-Cervical Disease-2019-Greene-LEEP.pdf': '400', # 200 in each arm
                'MAL-Malaria-2019-Foy-RIMDAMAL.pdf': '552',
-               'TB-TB-2019-N-S.pdf': None,
-               'NUT-Stunting-2019-Humphrey-SHINE.pdf': None,
-               'PNE-Pneumonia-2018-Keenan-Mortality Reduction After Oral Azithromycin.pdf': None,
-               'EDD-Cholera-2016-Qadri-Shanchol.pdf': None,
-               'VAC-Ecoli-2019-Qadri-ETVAX.pdf': None,
-               'MAL-Malaria-2016-Valencia-Phase 1 and 2a Clinical.pdf': None,
-               'NTD-Filariasis-2019-Weil-DOLF IDA Indonesia.pdf': None,
-               'VAC-M-2015-L-W.pdf': None}
+               'TB-TB-2019-N-S.pdf': '400', # 2 arms
+               'NUT-Stunting-2019-Humphrey-SHINE.pdf': '4800', # 4 arms
+               'PNE-Pneumonia-2018-Keenan-Mortality Reduction After Oral Azithromycin.pdf':'226222', # 2 arms,  62628+69472+94122
+               'EDD-Cholera-2016-Qadri-Shanchol.pdf': '190,229', # 2 arms: we need at least 95,115 individuals in an arm of the study i.e., a total of 190,229 population will be required to conduct the trial.
+               'VAC-Ecoli-2019-Qadri-ETVAX.pdf': '45', # 45 adults then part B has 150 toddlers
+               'MAL-Malaria-2016-Valencia-Phase 1 and 2a Clinical.pdf': '28',
+               'NTD-Filariasis-2019-Weil-DOLF IDA Indonesia.pdf': '4000', # 2 arms: The sample size of 2000 participants in each arm
+               'VAC-M-2015-L-W.pdf': '2000'}

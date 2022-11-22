@@ -139,7 +139,10 @@ def display_progress_bar(dataset, data, score):
         Output("simulation", "value"),
         Output("simulation_to_pages", "data"),
         Output("num_subjects_explanation", "children"),
+        Output("is_num_subjects_low_confidence", "style"),
         Output("log", "children"),
+        Output("original_file_link", "href"),
+        Output("original_file_link", "style")
     ]
     ,
     inputs=[Input("dataset", "value"),
@@ -151,6 +154,8 @@ def display_progress_bar(dataset, data, score):
 def user_uploaded_file(  # set_progress,
         dataset, contents, file_name, file_date):
     tasks_completed = []
+
+    triggered_id = ctx.triggered_id
 
     # Disabled progress bar
     def set_progress(text):
@@ -173,10 +178,18 @@ def user_uploaded_file(  # set_progress,
 
     start_time = time.time()
 
-    if dataset is not None:
+    original_file_link = ""
+    original_file_style = {"display":"none"}
+
+    if dataset is not None and triggered_id == "dataset":
         pages = file_to_text[dataset]
         file_name = dataset
         report_progress(f"Taking file from dropdown {dataset}.")
+
+        if "NCT" in file_name:
+            components = file_name.split("_", 2)
+            original_file_link = f"https://clinicaltrials.gov/ProvidedDocs/{components[0]}/{components[1]}/{components[2]}"
+            original_file_style = {}
     else:
         report_progress(f"Parsing file {file_name} ({int(np.round(len(contents) / 1000))} KB).")
 
@@ -207,13 +220,19 @@ def user_uploaded_file(  # set_progress,
     simulation = simulation_to_pages['prediction']
 
     num_subjects_explanation = num_subjects_to_pages.get("comment", "")
+    num_subjects_low_confidence_style = {"display":"none"}
+    if num_subjects_to_pages["is_low_confidence"]:
+        num_subjects_low_confidence_style = {}
 
     return [file_name, str(file_date), desc, page_count, tokenised_pages, condition, condition_to_pages,
             phase, phase_to_pages, sap, sap_to_pages, effect_estimate, effect_estimate_to_pages,
             num_subjects, num_subjects_to_pages, num_arms, num_arms_to_pages, countries, country_to_pages, simulation,
             simulation_to_pages,
             num_subjects_explanation,
-            tasks_completed
+            num_subjects_low_confidence_style,
+            tasks_completed,
+            original_file_link,
+            original_file_style
             ]
 
 

@@ -16,10 +16,10 @@ from util.spacy_wrapper import nlp
 patterns = dict()
 
 patterns["sample size"] = ['sample size is #', 'sample size #', 'sample size of #', 'sample size to #',
-                           'sample size increase to #']
+                           'sample size increase to #', 'sample size will be #']
 patterns["sample"] = ['sample #', 'sample of #', 'sampling #']
 patterns["enroll"] = ['enroll #', 'enrol #', 'enrolling #', 'enroll up to #', 'enrolling up to #', 'enrol up to #',
-                      'enrolment #', 'enrollment #', 'enrolment of #', 'enrollment of #']
+                      'enrolment #', 'enrollment #', 'enrolment of #', 'enrollment of #', 'enrolment goal #', 'enrolment goal : #']
 patterns["will_enroll"] = ["will enroll #", "will enrol #", "aim to enroll #", "aim to enrol #"]
 patterns["recruit"] = ['recruit #', 'recruiting #', 'recruitment #', 'recruitment of']
 patterns["will_recruit"] = ["will recruit #", "aim to recruit #"]
@@ -37,7 +37,8 @@ patterns["misc_personal_noun"] = ['# people', '# persons', '# residents', '# mot
                                   '# mother child pairs', '# mother - child pairs',
                                   '# mother - infant pairs', '# individuals', "# sexually active", "# patients",
                                   "# pts", "# cases", "# * cases", '# * patients', '# * pts',
-                                  '# outpatients', '# * outpatients', '# * subjects']
+                                  '# outpatients', '# * outpatients', '# * subjects', "# volunteers",
+                                  "# high risk", "# high - risk"]  # "# vaccine recipients", "# recipients"]
 patterns["gender"] = ['# male', '# males', '# female', '# females', '# women', '# men', '# mothers', '# pregnant']
 patterns["age"] = ['# infants', '# adult', '# adults', '# adolescents', '# babies', '# children']
 patterns["disease_state"] = ['# healthy', '# hiv infected', '# hiv positive', '# hiv negative', '# hiv - infected',
@@ -47,6 +48,7 @@ patterns["selection"] = ['selection #', 'selection of #', ]
 patterns["demonym"] = ["# " + demonym.lower() for demonym in demonym_to_country_code]
 patterns["approximately"] = ["approximately #", "up to #"]
 patterns["to achieve"] = ["# to achieve"]
+patterns["study population"] = ["study population #", "study population of #"]
 patterns["optional_colon"] = ["number of subjects : #", "planned subjects : #", "subjects planned : #", "enrolment : #",
                               "enrollment : #", "sample size : #",
                               "number of subjects #", "planned subjects #", "subjects planned #", "enrolment #",
@@ -59,9 +61,16 @@ patterns["distance to num subjects no number"] = ["number of subjects", "number 
                                                   "number of pts"]
 patterns["distance to subjects no number"] = ["subjects", "participants", "patients", "pts"]
 patterns["distance to cases no number"] = ["cases"]
+patterns["distance to total no number"] = ["total"]
 # These are anticipated to be negative features.
 patterns["distance to per no number"] = ["per"]
+patterns["distance to each no number"] = ["each", "every"]
+patterns["distance to site no number"] = ["site"]
 patterns["distance to arm/group no number"] = ["arm", "group"]
+patterns["distance to future indicator no number"] = ["will"]
+patterns["distance to past indicator no number"] = ["was", "were", "to date", "literature"]
+patterns["distance to contents"] = ["table of contents", "index"]
+patterns["distance to et al"] = ["et al"]
 
 patterns_without_number = set([x for x in patterns if "no number" in x])
 
@@ -75,8 +84,8 @@ matcher = Matcher(nlp.vocab)
 
 num_regex = re.compile(r'^[1-9]\d*,?\d+$')
 
-ABSOLUTE_MINIMUM = 35
-ABSOLUTE_MAXIMUM = 10000
+ABSOLUTE_MINIMUM = 8
+ABSOLUTE_MAXIMUM = 1000000
 
 for feature_name, feature_patterns in patterns.items():
     patterns = []
@@ -102,13 +111,20 @@ for feature_name, feature_patterns in patterns.items():
     matcher.add(feature_name, patterns)
 
 # Exclude things that are clearly not sample size, e.g. 50 ml
+# We must be careful with the negative matcher as this is very hard to debug.
+# Anything excluded with this pattern is excluded right at the beginning of the process. So SI units are a good example as they give us 100% confidence it's not the sample size under discussion.
 negative_matcher = Matcher(nlp.vocab)
 negative_patterns = []
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
     "IN": ["mg", "kg", "ml", "l", "g", "kg", "mg", "s", "days", "months", "years", "hours", "seconds", "minutes", "sec",
            "min", "mcg",
-           "mol", "mmol", "mi", "h", "s", "m", "km", "lb", "oz", "moles", "mole", "wk", "wks", "week", "weeks",
-           "lot", "cells", "appointments"]}}])
+           "mol", "mmol", "mi", "h", "hr", "hrs", "s", "m", "km", "lb", "oz", "moles", "mole", "wk", "wks", "week",
+           "weeks",
+           "cells", "appointments", "µg", "episodes", "incidents", "sites", "locations", "countries", "centres",
+           "centers",
+           "effect", "visits", "revolutions", "cgy", "mm3", "mm", "cm", "cm3", "sec", "pages", "mcg", "µl", "c", "°C",
+           "°", "platelets", "dl", "pg", "mmhg", "hg", "gl", "msec", "ms", "µs"]}}])
+
 negative_matcher.add("MASK", negative_patterns)
 
 
@@ -136,8 +152,13 @@ def extract_features(tokenised_pages: list):
 
     for phrase_match in matches:
 
-        if phrase_match[1] in tokens_to_exclude or phrase_match[2] in tokens_to_exclude:
-            # print ("skipping match at", tokens[phrase_match[1]], tokens[phrase_match[2]])
+        is_ignore = False
+
+        for i in range(phrase_match[1], phrase_match[2]):
+            if i in tokens_to_exclude:
+                is_ignore = True
+                break
+        if is_ignore:
             continue
 
         value = None
@@ -154,9 +175,17 @@ def extract_features(tokenised_pages: list):
             page_no, token_no, token = all_tokens[token_idx]
             if num_regex.match(token):
                 value = re.sub(r',', '', token)
+
+                parsed = int(value)
+                if parsed < ABSOLUTE_MINIMUM or parsed > ABSOLUTE_MAXIMUM:
+                    value = None
+                    continue
+
                 if value not in token_indexes:
                     token_indexes[value] = set()
                 token_indexes[value].add(token_idx)
+                continue
+
         if value:
             if value not in features:
                 features[value] = Counter()
@@ -192,8 +221,7 @@ def extract_features(tokenised_pages: list):
     candidates = []
     feature_vectors = []
     for cand, features in features.items():
-        if features["magnitude"] < ABSOLUTE_MINIMUM or features["magnitude"] > ABSOLUTE_MAXIMUM:
-            continue
+
         feature_vector = []
         for feature_name in FEATURE_NAMES:
             feature_vector.append(features.get(feature_name, 0))
@@ -260,10 +288,14 @@ class NumSubjectsExtractor:
             if k not in top_values:
                 del contexts[k]
 
+        is_low_confidence = [sum([p for p in probas if p > 0.5])] == 1
+
         is_per_arm = []
         for k, v in contexts.items():
-            if "per arm" in v:
+            v = v.lower()
+            if "per arm" in v or "in each arm" in v or "per cohort" in v or "in each cohort" in v or "per group" in v or "in each group" in v:
                 is_per_arm.append(k)
 
         return {"prediction": int(num_subjects), "pages": num_subjects_to_pages, "context": contexts, "score": score,
-                "comment": possible_candidates, "is_per_arm": is_per_arm, "proba": value_to_score}
+                "comment": possible_candidates, "is_per_arm": is_per_arm, "proba": value_to_score,
+                "is_low_confidence": is_low_confidence}
