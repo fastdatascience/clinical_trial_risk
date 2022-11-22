@@ -1,9 +1,9 @@
 import bz2
+import operator
 import pickle as pkl
 from os.path import exists
+
 import numpy as np
-import pandas as pd
-import operator
 
 from processors.country_extractor import LMIC_COUNTRIES
 
@@ -14,10 +14,12 @@ FEATURES = ["num_mentions", "first_mention", "last_mention",
             "num_mentions_email", "first_mention_email", "last_mention_email",
             "num_mentions_url", "first_mention_url", "last_mention_url",
             "is_lmic", "is_us_ca",
-           "is_protocol_high_income", "is_protocol_lmic", "is_protocol_usca", "is_protocol_international", "is_protocol_international_2"]
+            "is_protocol_high_income", "is_protocol_lmic", "is_protocol_usca", "is_protocol_international",
+            "is_protocol_international_2"]
+
 
 def make_feature_vector(rule_based_countries, country_group_probas,
-    international_score_spacy, international_score_nb):
+                        international_score_spacy, international_score_nb):
     """
     Create a feature vector from the previous 4 models, which can go into the ensemble model.
 
@@ -30,7 +32,7 @@ def make_feature_vector(rule_based_countries, country_group_probas,
     X = []
     country_identities = []
 
-    fv2 = [
+    document_level_features = [
         country_group_probas["HIGH_INCOME"],
         country_group_probas["LMIC"],
         country_group_probas["USCA"],
@@ -46,35 +48,35 @@ def make_feature_vector(rule_based_countries, country_group_probas,
         email_mentions = [c[0] for c in v if c[1] == "email"]
         url_mentions = [c[0] for c in v if c[1] == "url"]
 
-        fv = [len(all_mentions), min(all_mentions), max(all_mentions),
-              len(country_mentions), min(country_mentions) if len(country_mentions) > 0 else 0,
-              max(country_mentions) if len(country_mentions) > 0 else 0,
-              len(demonym_mentions), min(demonym_mentions) if len(demonym_mentions) > 0 else 0,
-              max(demonym_mentions) if len(demonym_mentions) > 0 else 0,
-              len(phone_mentions), min(phone_mentions) if len(phone_mentions) > 0 else 0,
-              max(phone_mentions) if len(phone_mentions) > 0 else 0,
-              len(email_mentions), min(email_mentions) if len(email_mentions) > 0 else 0,
-              max(phone_mentions) if len(phone_mentions) > 0 else 0,
-              len(url_mentions), min(url_mentions) if len(url_mentions) > 0 else 0,
-              max(phone_mentions) if len(phone_mentions) > 0 else 0,
-              k in LMIC_COUNTRIES, k in {"US", "CA"}]
-        fv.extend(fv2)
-        fv = np.asarray(fv)
-        X.append(fv)
+        feature_vector = [len(all_mentions), min(all_mentions), max(all_mentions),
+                          len(country_mentions), min(country_mentions) if len(country_mentions) > 0 else 0,
+                          max(country_mentions) if len(country_mentions) > 0 else 0,
+                          len(demonym_mentions), min(demonym_mentions) if len(demonym_mentions) > 0 else 0,
+                          max(demonym_mentions) if len(demonym_mentions) > 0 else 0,
+                          len(phone_mentions), min(phone_mentions) if len(phone_mentions) > 0 else 0,
+                          max(phone_mentions) if len(phone_mentions) > 0 else 0,
+                          len(email_mentions), min(email_mentions) if len(email_mentions) > 0 else 0,
+                          max(phone_mentions) if len(phone_mentions) > 0 else 0,
+                          len(url_mentions), min(url_mentions) if len(url_mentions) > 0 else 0,
+                          max(phone_mentions) if len(phone_mentions) > 0 else 0,
+                          k in LMIC_COUNTRIES, k in {"US", "CA"}]
+        feature_vector.extend(document_level_features)
+        feature_vector = np.asarray(feature_vector)
+        X.append(feature_vector)
         country_identities.append(k)
 
-        fv = [0] * 20
-        fv.extend(fv2)
-        fv = np.asarray(fv)
-        X.append(fv)
+        feature_vector = [0] * 20
+        feature_vector.extend(document_level_features)
+        feature_vector = np.asarray(feature_vector)
+        X.append(feature_vector)
         country_identities.append("XX")
 
         if "US" not in rule_based_countries and "CA" not in rule_based_countries:
-            fv = [0] * 20
-            fv[-1] = 1
-            fv.extend(fv2)
-            fv = np.asarray(fv)
-            X.append(fv)
+            feature_vector = [0] * 20
+            feature_vector[-1] = 1
+            feature_vector.extend(document_level_features)
+            feature_vector = np.asarray(feature_vector)
+            X.append(feature_vector)
             country_identities.append("US")
 
     X = np.asarray(X)
@@ -94,8 +96,8 @@ class CountryEnsembleExtractor:
         with bz2.open(path_to_classifier, "rb") as f:
             self.model = pkl.load(f)
 
-    def process(self,rule_based_countries, country_group_probas,
-    international_score_spacy, international_score_nb) -> tuple:
+    def process(self, rule_based_countries, country_group_probas,
+                international_score_spacy, international_score_nb) -> tuple:
         """
         Identify the countries the trial takes place in.
 
@@ -109,25 +111,35 @@ class CountryEnsembleExtractor:
         mean_international_score = np.mean([international_score_nb, international_score_spacy])
 
         X, country_identities = make_feature_vector(rule_based_countries, country_group_probas,
-            international_score_spacy, international_score_nb)
+                                                    international_score_spacy, international_score_nb)
 
-        probas = self.model.predict_proba(X)[:,1]
+        if len(X) > 0:
+            probas = self.model.predict_proba(X)[:, 1]
 
-        scores = {}
-        for i in range(len(X)):
-            scores[country_identities[i]] = probas[i]
+            scores = {}
+            for i in range(len(X)):
+                scores[country_identities[i]] = probas[i]
 
-        country_predictions = []
+            country_predictions = []
 
-        if mean_international_score > 0.5:
-            threshold = 0.1
+            if mean_international_score > 0.5:
+                threshold = 0.1
+            else:
+                threshold = 0.5
+
+            for country, score in sorted(scores.items(), key=operator.itemgetter(1), reverse=True):
+                if score > threshold or len(country_predictions) == 0 or \
+                        (len(country_predictions) == 1 and mean_international_score > 0.5):
+                    country_predictions.append(country)
         else:
-            threshold = 0.5
-
-        for country, score in sorted(scores.items(), key=operator.itemgetter(1), reverse=True):
-            if score > threshold or len(country_predictions) == 0 or \
-                (len(country_predictions) == 1 and mean_international_score > 0.5):
-                country_predictions.append(country)
+            if max(country_group_probas, key=country_group_probas.get) == "USCA":
+                country_predictions = ["US"]
+                scores = {}
+                if mean_international_score > 0.5:
+                    country_predictions.append("XX")
+            else:
+                country_predictions = ["XX"]
+                scores = {}
 
         return {"prediction": country_predictions,
-         "score": scores}
+                "score": scores}
