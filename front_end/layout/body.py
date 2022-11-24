@@ -624,7 +624,7 @@ rows.append(
                                     data=tertile_finder.DF_TERTILES_DATA_FOR_DASH,
                                     columns=tertile_finder.DF_TERTILES_COLUMNS_FOR_DASH
                                 ),
-                                html.P("You can configure the weights and thresholds for the model below."),
+                                html.P("You can configure the weights and thresholds for the model below. This allows you to set the importance of the SAP vs the nunber of arms, for example."),
                                 dash_table.DataTable(
                                     id="configuration_table",
                                     editable=True,
@@ -637,7 +637,7 @@ rows.append(
                             ],
                         ),
 
-                    ], label="Sample size tertiles", value="tab_tertiles"),
+                    ], label="Configure thresholds and parameters", value="tab_tertiles"),
 
                 ], id="tabs"
 
