@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 
-from util.constants import SCORE_UPPER_TERTILE, SCORE_LOWER_TERTILE
 import time
 
 from util.score_to_risk_level_converter import get_excel_formula_for_risk_level, get_risk_level_and_traffic_light, \
@@ -9,7 +8,19 @@ from util.score_to_risk_level_converter import get_excel_formula_for_risk_level,
 
 
 def calculate_risk_level(file_name: str, condition: str, phase: float, sap: int, effect_estimate: int,
-                         num_subjects_and_tertile: list,num_arms:int, is_international: int, simulation: int) -> tuple:
+                         num_subjects_and_tertile: list,num_arms:int, is_international: int, simulation: int,
+
+low_risk_threshold : int,
+    high_risk_threshold : int,
+    weight_number_of_arms : int,
+    weight_phase : int,
+    weight_sap : int,
+    weight_effect_estimate : int,
+    weight_num_subjects : int,
+    weight_international : int,
+    weight_simulation : int,
+    weight_bias : int
+                         ) -> tuple:
     """
     Calculate the risk of a trial given the parameters that have been extracted about it by the NLP components.
     :param file_name:
@@ -82,14 +93,14 @@ def calculate_risk_level(file_name: str, condition: str, phase: float, sap: int,
                     None,
                     None,
                     None,
-                    2,
-                    5,
-                    26,
-                    16,
-                    10,
-                    10,
-                    10,
-                    -7
+                    weight_number_of_arms,
+                    weight_phase,
+                    weight_sap,
+                    weight_effect_estimate,
+                    weight_num_subjects,
+                    weight_international,
+                    weight_simulation,
+                    weight_bias,
                     ]
     scores = df.Value * df.Weight
     df["Score"] = scores
@@ -117,15 +128,15 @@ def calculate_risk_level(file_name: str, condition: str, phase: float, sap: int,
 
         description.append(f"Total score is {total_score}.")
         description.append(
-            get_human_readable_risk_levels())
+            get_human_readable_risk_levels(high_risk_threshold,low_risk_threshold))
 
-        risk_level, _ = get_risk_level_and_traffic_light(total_score)
+        risk_level, _ = get_risk_level_and_traffic_light(total_score,high_risk_threshold,low_risk_threshold)
         description.append(f"Risk is therefore {risk_level}")
 
     df = df.append(
         pd.DataFrame(
             {"Parameter": [
-                f"Total score ({SCORE_UPPER_TERTILE}-100=low risk, 0-{SCORE_LOWER_TERTILE}=high risk)"],
+                f"Total score ({low_risk_threshold}-100=low risk, 0-{high_risk_threshold}=high risk)"],
                 "Score": [total_score], "Excel Formula": [f"=MIN(100,SUM(D7:D{len(df) + 1}))"]})
     )
 
@@ -134,7 +145,7 @@ def calculate_risk_level(file_name: str, condition: str, phase: float, sap: int,
             pd.DataFrame(
                 {"Parameter": [
                     f"Risk level"],
-                    "Score": [risk_level.upper()], "Excel Formula": [get_excel_formula_for_risk_level(f"D{len(df) + 1}")]})
+                    "Score": [risk_level.upper()], "Excel Formula": [get_excel_formula_for_risk_level(f"D{len(df) + 1}",high_risk_threshold,low_risk_threshold)]})
         )
 
     errors = []

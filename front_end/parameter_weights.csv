@@ -1,9 +1,11 @@
-Phase	HIV lower tertile	HIV upper tertile	TB lower tertile	TB upper tertile
-0	10	15	10	15
-0.5	40	130	30	60
-1	40	130	30	60
-1.5	80	280	40	80
-2	100	300	50	100
-2.5	1000	2000	500	1500
-3	1000	2000	500	1500
-4	3000	4000	3000	4000
+Parameter	Value
+High risk threshold	40
+Low risk threshold	50
+Number of arms	2
+Trial phase	5
+SAP completed?	26
+Effect Estimate disclosed?	16
+Number of subjects low/medium/high	10
+Trial is international?	10
+Trial uses simulation?	10
+Constant	-7

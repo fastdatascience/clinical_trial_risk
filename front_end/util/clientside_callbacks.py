@@ -3,17 +3,15 @@ from dash.dependencies import Input, Output
 JAVASCRIPT_FUNCTION_TO_CALCULATE_SAMPLE_SIZE_TERTILE = """function(num_subjects, condition, phase, data, columns) {
             if (num_subjects == null || (condition != "HIV" && condition != "TB") || phase === 0 || phase == null) {
                 return ["", "", [num_subjects, 0, 0, 0]];
-            } 
-            if (phase === 1.5) {
-                lower = (data[0][condition + " lower tertile"] + data[1][condition + " lower tertile"]) / 2;
-                upper = (data[0][condition + " upper tertile"] + data[1][condition + " upper tertile"]) / 2;
-            } else if (phase === 2.5) {
-                lower = (data[1][condition + " lower tertile"] + data[2][condition + " lower tertile"]) / 2;
-                upper = (data[1][condition + " upper tertile"] + data[2][condition + " upper tertile"]) / 2;
-            } else {
-                lower = data[phase - 1][condition + " lower tertile"];
-                upper = data[phase - 1][condition + " upper tertile"];
             }
+            var lookup;
+            if (phase === 4) {
+                lookup = 7;
+            } else {
+                lookup = phase * 2;
+            }
+            lower = data[lookup][condition + " lower tertile"];
+            upper = data[lookup][condition + " upper tertile"];
             if (num_subjects < lower) {
                return ["0 (small trial)", "🔴", [num_subjects, 0, lower, upper]];
             }
@@ -75,7 +73,8 @@ def add_clientside_callbacks(dash_app):
         [Input("view_log", "n_clicks"), Input("page_count", "n_clicks"), Input("explain_condition", "n_clicks"),
          Input("explain_phase", "n_clicks"), Input("explain_sap", "n_clicks"),
          Input("explain_effect_estimate", "n_clicks"),
-         Input("explain_num_subjects", "n_clicks"),Input("explain_num_arms", "n_clicks"), Input("explain_country", "n_clicks"),
+         Input("explain_num_subjects", "n_clicks"), Input("explain_num_arms", "n_clicks"),
+         Input("explain_country", "n_clicks"),
          Input("explain_simulation", "n_clicks"), Input("explain_tertiles", "n_clicks")
 
          ])

@@ -10,9 +10,14 @@ import pycountry
 from dash import dash_table
 
 from util.constants import EXPLANATION_OPTIONS
+from util.parameter_provider import DefaultParameterProvider
 from util.tertile_provider import DefaultSampleSizeTertileProvider
 
 tertile_finder = DefaultSampleSizeTertileProvider("sample_size_tertiles.csv")
+
+
+
+parameter_provider = DefaultParameterProvider("parameter_weights.csv")
 
 # Google Tag Manager
 google_tag_manager_iframe = html.Iframe(src="https://www.googletagmanager.com/ns.html?id=GTM-PNPSD9B", width=0,
@@ -618,8 +623,17 @@ rows.append(
                                     export_format="xlsx", page_size=20,
                                     data=tertile_finder.DF_TERTILES_DATA_FOR_DASH,
                                     columns=tertile_finder.DF_TERTILES_COLUMNS_FOR_DASH
-
                                 ),
+                                html.P("You can configure the weights and thresholds for the model below."),
+                                dash_table.DataTable(
+                                    id="configuration_table",
+                                    editable=True,
+                                    row_deletable=False,
+                                    export_format="xlsx", page_size=20,
+                                    data=parameter_provider.DEFAULT_WEIGHTS_DATA,
+                                    columns=parameter_provider.DF_PARAMETERS_COLUMNS_FOR_DASH
+                                ),
+
                             ],
                         ),
 

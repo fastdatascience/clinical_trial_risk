@@ -260,6 +260,7 @@ def user_uploaded_file(  # set_progress,
         Input('duration', 'value'),
         Input('countries', 'value'),
         Input('simulation', 'value'),
+        Input("configuration_table", "data")
     ]
 )
 def fill_table(
@@ -275,7 +276,19 @@ def fill_table(
         num_endpoints,
         duration,
         countries,
-        simulation, ):
+        simulation,
+        configuration_table_data):
+    high_risk_threshold = configuration_table_data[0]["Value"]
+    low_risk_threshold = configuration_table_data[1]["Value"]
+    weight_number_of_arms = configuration_table_data[2]["Value"]
+    weight_phase = configuration_table_data[3]["Value"]
+    weight_sap = configuration_table_data[4]["Value"]
+    weight_effect_estimate = configuration_table_data[5]["Value"]
+    weight_num_subjects = configuration_table_data[6]["Value"]
+    weight_international = configuration_table_data[7]["Value"]
+    weight_simulation = configuration_table_data[8]["Value"]
+    weight_bias = configuration_table_data[9]["Value"]
+
     try:
         if file_name is None:
             df = pd.DataFrame()
@@ -299,7 +312,18 @@ def fill_table(
             total_score, df, description = calculate_risk_level(file_name, condition, phase, sap, effect_estimate,
                                                                 num_subjects_and_tertile,
                                                                 num_arms,
-                                                                is_international, simulation)
+                                                                is_international, simulation,
+                                                                high_risk_threshold,
+                                                                low_risk_threshold,
+                                                                weight_number_of_arms,
+                                                                weight_phase,
+                                                                weight_sap,
+                                                                weight_effect_estimate,
+                                                                weight_num_subjects,
+                                                                weight_international,
+                                                                weight_simulation,
+                                                                weight_bias,
+                                                                )
 
         table_data = list([dict(d) for _, d in df.iterrows()])
         table_columns = [{"name": i, "id": i} for i in df.columns]
@@ -391,10 +415,11 @@ def download_table(download_button_clicks, data, columns):
     ],
     [
         Input("score", "data"),
+        Input("configuration_table", "data")
     ]
 )
 def show_gauge(
-        score):
+        score, configuration_table_data):
     """
     Once the score has been calculated a risk level can be displayed as a traffic light
     :param score:
@@ -406,7 +431,10 @@ def show_gauge(
     if type(score) is str:
         return ["#999999", {"label": score, "style": {"font-size": "18pt"}}]
 
-    risk_level, traffic_light = get_risk_level_and_traffic_light(score)
+    high_risk_threshold = configuration_table_data[0]["Value"]
+    low_risk_threshold = configuration_table_data[1]["Value"]
+
+    risk_level, traffic_light = get_risk_level_and_traffic_light(score, high_risk_threshold, low_risk_threshold)
 
     return [traffic_light, {"label": risk_level, "style": {"font-size": "18pt"}}]
 

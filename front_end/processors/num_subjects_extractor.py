@@ -19,7 +19,8 @@ patterns["sample size"] = ['sample size is #', 'sample size #', 'sample size of 
                            'sample size increase to #', 'sample size will be #']
 patterns["sample"] = ['sample #', 'sample of #', 'sampling #']
 patterns["enroll"] = ['enroll #', 'enrol #', 'enrolling #', 'enroll up to #', 'enrolling up to #', 'enrol up to #',
-                      'enrolment #', 'enrollment #', 'enrolment of #', 'enrollment of #', 'enrolment goal #', 'enrolment goal : #']
+                      'enrolment #', 'enrollment #', 'enrolment of #', 'enrollment of #', 'enrolment goal #',
+                      'enrolment goal : #']
 patterns["will_enroll"] = ["will enroll #", "will enrol #", "aim to enroll #", "aim to enrol #"]
 patterns["recruit"] = ['recruit #', 'recruiting #', 'recruitment #', 'recruitment of']
 patterns["will_recruit"] = ["will recruit #", "aim to recruit #"]
@@ -124,6 +125,11 @@ negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
            "centers",
            "effect", "visits", "revolutions", "cgy", "mm3", "mm", "cm", "cm3", "sec", "pages", "mcg", "µl", "c", "°C",
            "°", "platelets", "dl", "pg", "mmhg", "hg", "gl", "msec", "ms", "µs"]}}])
+# Exclude contents page
+negative_patterns.append([{"LIKE_NUM": True}, {"TEXT": {"REGEX": r"^\d+\.\d+$"}}])
+
+# The first 31 participants
+negative_patterns.append([{"LOWER": "the"}, {"LOWER": "first"}, {"LIKE_NUM": True}])
 
 negative_matcher.add("MASK", negative_patterns)
 
@@ -196,7 +202,8 @@ def extract_features(tokenised_pages: list):
             features[value]["num_occurrences"] += 1
             if value not in num_subjects_to_pages:
                 num_subjects_to_pages[value] = []
-            num_subjects_to_pages[value].append(page_no)
+            if page_no not in num_subjects_to_pages[value]:
+                num_subjects_to_pages[value].append(page_no)
 
             if value not in contexts:
                 contexts[value] = ""
@@ -271,7 +278,7 @@ class NumSubjectsExtractor:
         value_to_score = {}
         possible_candidates = []
         for idx in top_indices:
-            if probas[idx] > score * 0.1 and len(possible_candidates) < 3:
+            if probas[idx] > score * 0.1 and len(possible_candidates) < 5:
                 possible_candidates.append(df_instances.candidate.iloc[idx])
                 value_to_score[df_instances.candidate.iloc[idx]] = probas[idx]
         possible_candidates = "Possible sample sizes found: " + ", ".join(possible_candidates)
@@ -288,7 +295,7 @@ class NumSubjectsExtractor:
             if k not in top_values:
                 del contexts[k]
 
-        is_low_confidence = [sum([p for p in probas if p > 0.5])] == 1
+        is_low_confidence = int(sum([p for p in probas if p > 0.5]) != 1)
 
         is_per_arm = []
         for k, v in contexts.items():
