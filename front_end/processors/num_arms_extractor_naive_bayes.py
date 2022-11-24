@@ -4,7 +4,9 @@ from os.path import exists
 
 import numpy as np
 
+import re
 
+is_number_regex = re.compile(r'^\d+$')
 # Best model: Model 9
 
 class NumArmsExtractorNaiveBayes:
@@ -37,11 +39,12 @@ class NumArmsExtractorNaiveBayes:
 
         token_counts = np.zeros((1, len(self.vectoriser.vocabulary_)))
         for page_no, tokens in enumerate(tokenised_pages):
-            if page_no >= 30:
-                break
+            # if page_no >= 30:
+            #     break
             for token_idx, token in enumerate(tokens):
                 token_lower = token.lower()
-                if token_lower in self.vectoriser.vocabulary_:
+                # exclude single digits on their own - we only use these as a feature if part of bigram.
+                if token_lower in self.vectoriser.vocabulary_ and not is_number_regex.match(token):
                     token_counts[0, self.vectoriser.vocabulary_[token_lower]] += 1
 
                 if token_idx < len(tokens) - 1:
