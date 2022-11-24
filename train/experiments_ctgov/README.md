@@ -1,6 +1,6 @@
 # Model leaderboard
 
-This is a summary of the models developed and trained on the ClinicalTrials.gov dataset.
+This is a summary of the models developed and trained on the ClinicalTrials.gov dataset. Most models did not make it into the final design, but the information about the experiments conducted is included here for completeness and reproducibility.
 
 The training scripts are all included here as Jupyter notebooks.
 
@@ -32,7 +32,7 @@ Models which are currently included in the tool are marked with an asterisk. Whe
 | 21 *                             | Spacy num arms with 3 classes and pre-filtered text                 | 67                       |                                                           | 78                   |                  |                    |                                                                 |            |              |
 | 22                               | Naive Bayes with bigrams 3 classes                                  | 53                       |                                                           | 72                   |                  |                    |                                                                 |            |              |
 | 23                               | Naive Bayes with bigrams 3 classes predetermined vocab              | 55                       |                                                           | 73                   |                  |                    |                                                                 |            |              |
-| 24 *                             | Naive Bayes with bigrams 3 classes predetermined vocab cleaned up   |                          |                                                           |                      |                  |                    |                                                                 |            |              |
+| 24 *                             | Naive Bayes with bigrams 3 classes predetermined vocab cleaned up   | 55                       |                                                           | 73                   |                  |                    |                                                                 |            |              |
 |                                  |                                                                     |                          |                                                           |                      |                  |                    |                                                                 |            |              |
 | PHASE                            |                                                                     |                          |                                                           |                      |                  |                    |                                                                 |            |              |
 | 0                                | baseline original rule based                                        | 50                       |                                                           |                      |                  |                    |                                                                 |            |              |
