@@ -10,16 +10,16 @@ from util.score_to_risk_level_converter import get_excel_formula_for_risk_level,
 def calculate_risk_level(file_name: str, condition: str, phase: float, sap: int, effect_estimate: int,
                          num_subjects_and_tertile: list,num_arms:int, is_international: int, simulation: int,
 
-low_risk_threshold : int,
-    high_risk_threshold : int,
-    weight_number_of_arms : int,
-    weight_phase : int,
-    weight_sap : int,
-    weight_effect_estimate : int,
-    weight_num_subjects : int,
-    weight_international : int,
-    weight_simulation : int,
-    weight_bias : int
+high_risk_threshold : int,
+    low_risk_threshold : int,
+    weight_number_of_arms : float,
+    weight_phase : float,
+    weight_sap : float,
+    weight_effect_estimate : float,
+    weight_num_subjects : float,
+    weight_international : float,
+    weight_simulation : float,
+    weight_bias : float
                          ) -> tuple:
     """
     Calculate the risk of a trial given the parameters that have been extracted about it by the NLP components.

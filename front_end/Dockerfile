@@ -12,7 +12,7 @@ RUN pip install spacy==3.2.3
 # Make sure Tika Jar file is downloaded
 #RUN python -c 'import tika; tika.initVM(); from tika import parser; import io; parser.from_buffer(io.BytesIO(b""), xmlContent=True)'
 # Make sure Spacy language model is downloaded
-RUN python -m spacy download en_core_web_sm
+#RUN python -m spacy download en_core_web_sm
 
 # Create a directory where the code is to be hosted
 RUN mkdir /app

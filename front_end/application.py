@@ -278,16 +278,16 @@ def fill_table(
         countries,
         simulation,
         configuration_table_data):
-    high_risk_threshold = configuration_table_data[0]["Value"]
-    low_risk_threshold = configuration_table_data[1]["Value"]
-    weight_number_of_arms = configuration_table_data[2]["Value"]
-    weight_phase = configuration_table_data[3]["Value"]
-    weight_sap = configuration_table_data[4]["Value"]
-    weight_effect_estimate = configuration_table_data[5]["Value"]
-    weight_num_subjects = configuration_table_data[6]["Value"]
-    weight_international = configuration_table_data[7]["Value"]
-    weight_simulation = configuration_table_data[8]["Value"]
-    weight_bias = configuration_table_data[9]["Value"]
+    high_risk_threshold = int(configuration_table_data[0]["Value"])
+    low_risk_threshold = int(configuration_table_data[1]["Value"])
+    weight_number_of_arms = float(configuration_table_data[2]["Value"])
+    weight_phase = float(configuration_table_data[3]["Value"])
+    weight_sap = float(configuration_table_data[4]["Value"])
+    weight_effect_estimate = float(configuration_table_data[5]["Value"])
+    weight_num_subjects = float(configuration_table_data[6]["Value"])
+    weight_international = float(configuration_table_data[7]["Value"])
+    weight_simulation = float(configuration_table_data[8]["Value"])
+    weight_bias = float(configuration_table_data[9]["Value"])
 
     try:
         if file_name is None:
@@ -431,8 +431,8 @@ def show_gauge(
     if type(score) is str:
         return ["#999999", {"label": score, "style": {"font-size": "18pt"}}]
 
-    high_risk_threshold = configuration_table_data[0]["Value"]
-    low_risk_threshold = configuration_table_data[1]["Value"]
+    high_risk_threshold = int(configuration_table_data[0]["Value"])
+    low_risk_threshold = int(configuration_table_data[1]["Value"])
 
     risk_level, traffic_light = get_risk_level_and_traffic_light(score, high_risk_threshold, low_risk_threshold)
 
