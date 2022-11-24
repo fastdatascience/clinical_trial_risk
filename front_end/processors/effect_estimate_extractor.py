@@ -41,7 +41,7 @@ def get_context(all_tokens, idx):
     end = idx + WINDOW_SIZE
     for j in range(start, end):
         if j < 0 or j >= len(all_tokens):
-            w = "" # pad
+            w = ""  # pad
         else:
             w = all_tokens[j][-1]
             if w.endswith("%"):

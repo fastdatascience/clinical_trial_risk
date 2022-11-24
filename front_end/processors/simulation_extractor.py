@@ -1,8 +1,8 @@
 import bz2
 import pickle as pkl
 from os.path import exists
+
 import pandas as pd
-import numpy as np
 
 from util.page_tokeniser import iterate_tokens
 
@@ -125,8 +125,7 @@ class SimulationExtractor:
             if feature_pages[idx] is not None:
                 page_to_probas[feature_pages[idx]] = probabilities[0] - proba
 
-
-        return {"prediction": prediction_idx, "pages": simulation_to_pages,  "page_scores": page_to_probas,
+        return {"prediction": prediction_idx, "pages": simulation_to_pages, "page_scores": page_to_probas,
                 "score": probability_of_simulation, "context": contexts
 
                 }

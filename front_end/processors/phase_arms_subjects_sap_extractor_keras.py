@@ -1,11 +1,10 @@
 import re
 from os.path import exists
 
-import spacy
-from tensorflow import keras
-import tensorflow_hub as hub
-
 import numpy as np
+import tensorflow_hub as hub
+from tensorflow import keras
+
 word2num = {'one': 1,
             'two': 2,
             'three': 3,
@@ -59,7 +58,8 @@ phase_lookup = {'0': 0, '1': 0.5, '2': 1, '3': 1.5, '4': 2, '5': 2.5, '6': 3, '7
 arms_lookup = {'8': 1, '9': 2, '10': 3, '11': 4, '12': 5}
 
 num_subjects_lookup = {'13': '1-24', '14': '25-49', '15': '50-99', '16': '100-199', '17': '200-499', '18': '500-999',
-                               '19': '1000-9999', '20': '10000-'}
+                       '19': '1000-9999', '20': '10000-'}
+
 
 # Current best model: Expt10
 class PhaseArmsSubjectsSAPMultiExtractorKeras:
@@ -71,7 +71,7 @@ class PhaseArmsSubjectsSAPMultiExtractorKeras:
                 f"WARNING! UNABLE TO LOAD MULTI CLASSIFIER {path_to_classifier}. You need to run the training script.")
             self.model = None
             return
-        self.model = keras.models.load_model(path_to_classifier, custom_objects={'KerasLayer':hub.KerasLayer})
+        self.model = keras.models.load_model(path_to_classifier, custom_objects={'KerasLayer': hub.KerasLayer})
 
     def process(self, tokenised_pages: list) -> tuple:
         pass
@@ -168,4 +168,5 @@ class PhaseArmsSubjectsSAPMultiExtractorKeras:
         return {"prediction": [phase, num_arms, num_subjects, has_sap],
                 "pages": [phase_to_pages, num_arms_to_pages, num_subjects_to_pages, sap_to_pages],
                 "score": [phase_proba, num_arms_proba, num_subjects_proba, sap_proba],
-                "comment": [None, None, "Sample size is likely to be in range " + re.sub(r'\-$', '+', num_subjects), None]}
+                "comment": [None, None, "Sample size is likely to be in range " + re.sub(r'\-$', '+', num_subjects),
+                            None]}

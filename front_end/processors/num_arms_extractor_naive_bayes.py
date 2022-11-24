@@ -1,12 +1,13 @@
 import bz2
 import pickle as pkl
+import re
 from os.path import exists
 
 import numpy as np
 
-import re
-
 is_number_regex = re.compile(r'^\d+$')
+
+
 # Best model: Model 9
 
 class NumArmsExtractorNaiveBayes:

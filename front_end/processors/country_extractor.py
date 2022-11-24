@@ -2,7 +2,6 @@ import re
 
 import pycountry
 from country_named_entity_recognition import find_countries
-from tld import get_tld
 
 from util.demonym_finder import find_demonyms
 from util.phone_number_finder import find_phone_numbers
@@ -334,6 +333,7 @@ EMAIL_TLDS = {'ad',
 
 get_tld_regex = re.compile(r'[a-z]\.(' + "|".join(EMAIL_TLDS) + r")(?:\b|$|/)")
 
+
 def extract_features(pages: list):
     country_to_pages = {}
 
@@ -365,7 +365,8 @@ def extract_features(pages: list):
                             type = "url"
                         else:
                             type = "email"
-                        all_matches.append((pycountry.countries.lookup(tld), token.idx, token.idx + len(token.text), type))
+                        all_matches.append(
+                            (pycountry.countries.lookup(tld), token.idx, token.idx + len(token.text), type))
 
         for country, start, end, match_type in all_matches:
             if country.alpha_2 not in country_to_pages:
@@ -420,4 +421,5 @@ class CountryExtractor:
             first_mentioned_countries = sorted(country_to_pages.items(), key=lambda a: min(a[1]))
             prediction.add(first_mentioned_countries[0][0])
 
-        return {"prediction": list(prediction), "pages": country_to_pages, "features":country_to_matches, "context": contexts}
+        return {"prediction": list(prediction), "pages": country_to_pages, "features": country_to_matches,
+                "context": contexts}

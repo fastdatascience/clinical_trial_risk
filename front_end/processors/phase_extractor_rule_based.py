@@ -61,7 +61,6 @@ patterns["randomised"] = ['randomised', 'randomized']
 patterns["multinational"] = ["multinational", "international", "multi-national"]
 patterns["multicenter"] = ["multicenter", "multi-center", "multicentre", "multi-centre", "multisite", "multi-site"]
 
-
 patterns["neg journals"] = ['lancet', 'nature', 'doi']
 patterns["neg in a"] = ["in a", "was a"]
 patterns["neg reported"] = ['reported', 'conducted', 'demonstrated', 'showed', 'mentioned', 'conducted', 'noted']
