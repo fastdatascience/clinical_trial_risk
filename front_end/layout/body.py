@@ -397,7 +397,7 @@ rows.append(
                     html.Span(
                         [
                             html.P(["Number of subjects ", html.Span("", id="subjects_traffic_light"), " ",
-                                    html.Span("⚠ Low confidence!", id="is_num_subjects_low_confidence",
+                                    html.Span(html.Span("⚠ Low confidence! ", style={"color":"yellow"}), id="is_num_subjects_low_confidence",
                                               style={"display": "none"}),
                                     html.A(html.Sup("explain"), id="explain_num_subjects",
                                            )],
