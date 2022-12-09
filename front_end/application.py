@@ -5,7 +5,7 @@ import time
 import traceback
 
 import dash
-import dash_auth
+# import dash_auth
 import dash_html_components as html
 import numpy as np
 import pandas as pd
@@ -30,9 +30,9 @@ COMMIT_ID = os.environ.get('COMMIT_ID', "not found")
 # cache = diskcache.Cache("./cache")
 # long_callback_manager = DiskcacheLongCallbackManager(cache)
 
-VALID_USERNAME_PASSWORD_PAIRS = {
-    'admin': 'DsRNJmZ'
-}
+# VALID_USERNAME_PASSWORD_PAIRS = {
+#     'admin': 'DsRNJmZ'
+# }
 
 word_cloud_generator = WordCloudGenerator("models/idfs_for_word_cloud.pkl.bz2")
 master_processor = MasterProcessor("models/condition_classifier.pkl.bz2",
@@ -56,10 +56,10 @@ dash_app = dash.Dash(
                          {"name": "description",
                           "content": "Analyse your Clinical Trial protocols and identify risk factors using Natural Language Processing, from Fast Data Science."}],
 )
-auth = dash_auth.BasicAuth(
-    dash_app,
-    VALID_USERNAME_PASSWORD_PAIRS
-)
+# auth = dash_auth.BasicAuth(
+#     dash_app,
+#     VALID_USERNAME_PASSWORD_PAIRS
+# )
 
 dash_app.title = "Clinical Trial Risk Tool"
 server = dash_app.server  # For Google Cloud Platform
