@@ -18,6 +18,7 @@ def display_breakdown_graph_by_pages_in_document(what_to_display: str, tokenised
                                                  num_endpoints_to_pages: dict,
                                                  num_sites_to_pages: dict,
                                                  num_subjects_to_pages: dict,
+                                                 num_arms_to_pages: dict,
                                                  phase_to_pages: dict,
                                                  sap_to_pages: dict,
                                                  simulation_to_pages: dict) -> tuple:
@@ -88,6 +89,7 @@ def display_breakdown_graph_by_pages_in_document(what_to_display: str, tokenised
               "num_endpoints": num_endpoints_to_pages,
               "num_sites": num_sites_to_pages,
               "num_subjects": num_subjects_to_pages,
+              "num_arms": num_arms_to_pages,
               "phase": phase_to_pages,
               "sap": sap_to_pages,
               "simulation": simulation_to_pages}
@@ -104,16 +106,27 @@ def display_breakdown_graph_by_pages_in_document(what_to_display: str, tokenised
         human_readable_prediction = pretty_print_countries(prediction)
 
     graph_surtitles_lookup = {
-        "condition": [f"Condition identified: ", html.B(prediction), f". Confidence: {score * 100:.1f}%. The heat map below shows you key terms related to the condition and which pages they occurred on throughout the document."],
-        "country": [f"Which countries were mentioned on which pages in the document? Estimated trial countries: ", html.B(human_readable_prediction), ". The AI looked at the countries which were mentioned more often and earlier on in the document than other countries. The graph below shows the candidate countries as a heat map throughout the pages of the document."],
+        "condition": [f"Condition identified: ", html.B(prediction),
+                      f". Confidence: {score * 100:.1f}%. The heat map below shows you key terms related to the condition and which pages they occurred on throughout the document."],
+        "country": [f"Which countries were mentioned on which pages in the document? Estimated trial countries: ",
+                    html.B(human_readable_prediction),
+                    ". The AI looked at the countries which were mentioned more often and earlier on in the document than other countries. The graph below shows the candidate countries as a heat map throughout the pages of the document."],
         "duration": "",
-        "effect_estimate": [f"Where was an effect estimate found in the document? The graph below shows some candidate effect estimates and a selection of key terms by page number, overlaid with page-level probabilities (in pink - click the legend to hide). The protocol is {score * 100:.1f}% likely to contain an effect estimate."],
+        "effect_estimate": [
+            f"Where was an effect estimate found in the document? The graph below shows some candidate effect estimates and a selection of key terms by page number, overlaid with page-level probabilities (in pink - click the legend to hide). The protocol is {score * 100:.1f}% likely to contain an effect estimate."],
         "num_endpoints": "",
         "num_sites": "",
-        "num_subjects": [f"Which pages contained terms relating to the number of subjects? The sample size appears to be {prediction} with confidence {score * 100:.1f}%."],
-        "phase": [f"Where was the phase mentioned in the document? The graph below shows possible phases and which pages they were mentioned on. The document is most likely to be ", html.B(f"Phase {prediction}"), "."],
-        "sap": [f"Which pages contained highly statistical content and were likely to be part of the SAP? Graph of a selection of key statistical terms by page number, overlaid with page-level probabilities (in pink - click the legend to hide). The protocol is {score * 100:.1f}% likely to contain an SAP."],
-        "simulation": [f"Which pages mentioned words related to simulation? The graph below shows a selection of simulation-related terms by page number. The protocol is {score * 100:.1f}% likely to involve simulation for sample size."]}
+        "num_subjects": [
+            f"Which pages contained terms relating to the number of subjects? The sample size appears to be {prediction} with confidence {score * 100:.1f}%."],
+        "num_arms": [
+            f"Which pages contained terms relating to the number of arms? The trial appears to have {prediction} arm(s)."],
+        "phase": [
+            f"Where was the phase mentioned in the document? The graph below shows possible phases and which pages they were mentioned on. The document is most likely to be ",
+            html.B(f"Phase {prediction}"), "."],
+        "sap": [
+            f"Which pages contained highly statistical content and were likely to be part of the SAP? Graph of a selection of key statistical terms by page number, overlaid with page-level probabilities (in pink - click the legend to hide)."],
+        "simulation": [
+            f"Which pages mentioned words related to simulation? The graph below shows a selection of simulation-related terms by page number. The protocol is {score * 100:.1f}% likely to involve simulation for sample size."]}
 
     graph_surtitle = graph_surtitles_lookup[what_to_display]
 
@@ -139,7 +152,7 @@ def display_breakdown_graph_by_pages_in_document(what_to_display: str, tokenised
         for page_no in page_nos_containing_occurrence:
             page_matrix[country_idx, page_no] += 1
 
-        if what_to_display == "country":
+        if what_to_display == "country" and len(country_code) == 2:
             country = pycountry.countries.lookup(country_code)
             name_for_y_axis = country.flag + country_code
             country_name = country.name
@@ -176,6 +189,19 @@ def display_breakdown_graph_by_pages_in_document(what_to_display: str, tokenised
         if len(items_dict["context"]) > 0:
             contexts.extend([html.H3(f"Possible mentions of {human_readable_what_to_display} in the document")])
         for value, context in items_dict["context"].items():
+            if type(context) is str and "Page" in context:
+                start_points = [m.start() for m in re.finditer(r'Page \d+:', context)]
+                if len(start_points) > 1:
+                    bullet_list = []
+                    for i in range(len(start_points)):
+                        if i < len(start_points) - 1:
+                            end = start_points[i + 1]
+                        else:
+                            end = len(context)
+                        bullet_list.append(html.Li(context[start_points[i]:end]))
+                    if len(bullet_list) > 0:
+                        context = html.Ul(bullet_list)
+
             contexts.extend([html.B(value), " ", context, html.Br()])
 
     if probas is not None:

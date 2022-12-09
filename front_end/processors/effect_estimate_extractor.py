@@ -27,7 +27,7 @@ WINDOW_SIZE = 20
 def transform_tokens(list_of_lists_of_tokens, vectoriser):
     token_counts = np.zeros((len(list_of_lists_of_tokens), len(vectoriser.vocabulary_)))
     for doc_no in range(len(list_of_lists_of_tokens)):
-        for i in range(40):
+        for i in range(WINDOW_SIZE * 2):
             weight = WINDOW_SIZE + 1 - abs(i - WINDOW_SIZE)
             token_lower = list_of_lists_of_tokens[doc_no][i].lower()
             if token_lower in vectoriser.vocabulary_:
@@ -37,21 +37,24 @@ def transform_tokens(list_of_lists_of_tokens, vectoriser):
 
 def get_context(all_tokens, idx):
     context = []
-    if idx - WINDOW_SIZE < 0 or idx + WINDOW_SIZE > len(all_tokens):
-        return None
-    for j in range(idx - WINDOW_SIZE, idx + WINDOW_SIZE):
-        w = all_tokens[j][-1]
-        if w.endswith("%"):
-            w = "DIGITPERCENT"
-        elif NUMBERS_REGEX.match(w):
-            if "." in w:
-                w = "DECIMALNUMBER"
-            elif PURE_NUMBERS_REGEX.match(w):
-                w = f"{len(w)}DIGITS"
-            else:
-                w = "OTHERNUMBER"
-        elif w in NUMBERS_IN_WORDS:
-            w = "NUMBERWORD"
+    start = idx - WINDOW_SIZE
+    end = idx + WINDOW_SIZE
+    for j in range(start, end):
+        if j < 0 or j >= len(all_tokens):
+            w = ""  # pad
+        else:
+            w = all_tokens[j][-1]
+            if w.endswith("%"):
+                w = "DIGITPERCENT"
+            elif NUMBERS_REGEX.match(w):
+                if "." in w:
+                    w = "DECIMALNUMBER"
+                elif PURE_NUMBERS_REGEX.match(w):
+                    w = f"{len(w)}DIGITS"
+                else:
+                    w = "OTHERNUMBER"
+            elif w in NUMBERS_IN_WORDS:
+                w = "NUMBERWORD"
         context.append(w)
     return context
 
@@ -141,6 +144,9 @@ class EffectEstimateExtractor:
                 {"token_idx": token_idxs, "token": instances, "page_no": page_nos, "y_pred": y_pred,
                  "y_pred_proba": y_pred_proba})
 
+            # hack: make it more lenient because there were very few positive examples in the training set.
+            df_result["y_pred"] = df_result["y_pred_proba"] > 0.2
+
             top_score = df_result.y_pred_proba.max()
             page_to_max_proba = df_result.groupby("page_no")["y_pred"].max()
             for idx in range(len(tokenised_pages)):
@@ -172,8 +178,10 @@ class EffectEstimateExtractor:
             for idx in range(len(top_results)):
                 token_idx = top_results.token_idx.iloc[idx]
                 token = top_results.token.iloc[idx]
-                context[token] = f"Page {top_results.page_no.iloc[0] + 1}: " + " ".join(
-                    [token for page_no, token_no, token in all_tokens[token_idx - 20:token_idx + 20]])
+                if token not in context:
+                    context[token] = ""
+                context[token] = (context[token] + " " + f"Page {top_results.page_no.iloc[0] + 1}: " + " ".join(
+                    [token for page_no, token_no, token in all_tokens[token_idx - 20:token_idx + 20]])).strip()
 
         # Add in some hard coded keywords for display purposes only
         # The presence of these keywords alone does not affect the classifier's output, as they are meaningless without a numerical value.

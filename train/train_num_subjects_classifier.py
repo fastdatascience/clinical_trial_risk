@@ -53,43 +53,6 @@ df["ground_truth"] = df.file_name.map(annotations).apply(lambda x: re.sub(r'\D.+
 
 print(f"Loaded {len(df)} annotations")
 
-if False:
-
-    contexts = {}
-    for context in ["preceding_unigram", "preceding_bigram", "following_unigram", "following_bigram"]:
-        contexts[context] = Counter()
-
-    print(f"Saving contexts of positive examples to {DIAGNOSTICS_FILE_POSITIVE_EXAMPLES}")
-    with open(DIAGNOSTICS_FILE_POSITIVE_EXAMPLES, "w", encoding="utf-8") as f:
-        for file_name, ground_truth in annotations.items():
-            if ground_truth is None:
-                continue
-            raw_texts = file_to_text[file_name]
-            tokenised_pages = list(tokenise_pages(raw_texts))
-
-            for page_no, tokens in enumerate(tokenised_pages):
-                for idx, token in enumerate(tokens):
-                    if token == ground_truth:
-                        start = max(0, idx - 5)
-                        end = min(idx + 5, len(tokens) - 1)
-                        f.write(" ".join(tokens[start:end]) + "\n")
-                        if idx > 1:
-                            contexts["preceding_bigram"][(tokens[idx - 2] + " " + tokens[idx - 1]).lower()] += 1
-                        if idx > 0:
-                            contexts["preceding_unigram"][tokens[idx - 1].lower()] += 1
-                        if idx < len(tokens) - 1:
-                            contexts["following_unigram"][tokens[idx + 1].lower()] += 1
-                        if idx < len(tokens) - 2:
-                            contexts["following_bigram"][(tokens[idx + 1] + " " + tokens[idx + 2]).lower()] += 1
-
-    print(f"Saving N-gram data to {DIAGNOSTICS_FILE_N_GRAMS}")
-    with open(DIAGNOSTICS_FILE_N_GRAMS, "w", encoding="utf-8") as f:
-        for context, counter in contexts.items():
-            f.write("\n" + context.upper() + "\n\n")
-            counter = sorted(counter.items(), key=operator.itemgetter(1), reverse=True)
-            for word, count in counter:
-                f.write(f"{word}\t{count}\n")
-
 all_feature_sets = []
 for file_name, ground_truth in annotations.items():
     if ground_truth is None:
@@ -140,7 +103,7 @@ acc_10pc = df['is_correct_within_10%_margin'].mean()
 print(
     f"Proportion correct within 10% margin using {len(df)}-fold cross-validation is {acc_10pc * 100:.2f}%")
 
-df.to_excel(DIAGNOSTICS_FILE_EXCEL)
+df.to_excel(DIAGNOSTICS_FILE_EXCEL, index=False)
 
 with open(SUMMARY_FILE, "a", encoding="utf-8") as f:
     f.write(

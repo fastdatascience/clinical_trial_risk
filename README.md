@@ -50,12 +50,6 @@ Install everything in `requirements.txt`:
 pip install -r requirements.txt
 ```
 
-Install the Spacy model
-
-```
-python -m spacy download en_core_web_sm
-```
-
 Download the NLTK dependencies:
 
 ```
@@ -118,6 +112,14 @@ This will write to the following files:
 * `app/models/sap_classifier.pkl.bz2` - the two-way Naive Bayes classifier model that classifies individual pages of a protocol into SAP or not SAP.
 * `app/models/simulation_classifier.pkl.bz2` - the two-way Naive Bayes classifier model that classifies individual pages of a protocol into simulation or not simulation.
 * `app/models/idfs_for_word_cloud.pkl.bz2` - the Inverse Document Frequencies of words in the training dataset, used to select words for the word cloud.
+
+# Working with data from ClinicalTrials.gov
+
+There are some extra models which were trained from data downloaded from the ClinicalTrials.gov data dump.
+
+This is in *data/ctgov*.
+
+You will need to go to that folder and follow the instructions for downloading the Postgres data dump, and then run the shell scripts and Jupyter notebooks to generate the dataset.
 
 ## Developer's guide: Deploying the tool as a web app to Microsoft Azure App Service
 

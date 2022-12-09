@@ -35,9 +35,20 @@ VALID_USERNAME_PASSWORD_PAIRS = {
 }
 
 word_cloud_generator = WordCloudGenerator("models/idfs_for_word_cloud.pkl.bz2")
-master_processor = MasterProcessor("models/condition_classifier.pkl.bz2", "models/sap_classifier.pkl.bz2",
+master_processor = MasterProcessor("models/condition_classifier.pkl.bz2",
+                                   "models/phase_rf_classifier.pkl.bz2",
+                                   "models/spacy-textcat-phase-04-model-best",
+                                   "models/sap_classifier_document_level.pkl.bz2",
+                                   "models/sap_classifier.pkl.bz2",
                                    "models/effect_estimate_classifier.pkl.bz2",
                                    "models/num_subjects_classifier.pkl.bz2",
+                                   "models/subjects_classifier_document_level.pkl.bz2",
+                                   "models/arms_classifier_document_level.pkl.bz2",
+                                   "models/spacy-textcat-arms-21-model-best",
+                                   "models/spacy-textcat-international-11-model-best",
+                                   "models/spacy-textcat-country-16-model-best",
+                                   "models/international_classifier.pkl.bz2",
+                                   "models/country_ensemble_model.pkl.bz2",
                                    "models/simulation_classifier.pkl.bz2")
 
 dash_app = dash.Dash(
@@ -123,12 +134,17 @@ def display_progress_bar(dataset, data, score):
         Output("effect_estimate_to_pages", "data"),
         Output("num_subjects", "value"),
         Output("num_subjects_to_pages", "data"),
+        Output("num_arms", "value"),
+        Output("num_arms_to_pages", "data"),
         Output("countries", "value"),
         Output("country_to_pages", "data"),
         Output("simulation", "value"),
         Output("simulation_to_pages", "data"),
         Output("num_subjects_explanation", "children"),
+        Output("is_num_subjects_low_confidence", "style"),
         Output("log", "children"),
+        Output("original_file_link", "href"),
+        Output("original_file_link", "style")
     ]
     ,
     inputs=[Input("dataset", "value"),
@@ -140,6 +156,8 @@ def display_progress_bar(dataset, data, score):
 def user_uploaded_file(  # set_progress,
         dataset, contents, file_name, file_date):
     tasks_completed = []
+
+    triggered_id = ctx.triggered_id
 
     # Disabled progress bar
     def set_progress(text):
@@ -162,10 +180,18 @@ def user_uploaded_file(  # set_progress,
 
     start_time = time.time()
 
-    if dataset is not None:
+    original_file_link = ""
+    original_file_style = {"display": "none"}
+
+    if dataset is not None and triggered_id == "dataset":
         pages = file_to_text[dataset]
         file_name = dataset
         report_progress(f"Taking file from dropdown {dataset}.")
+
+        if "NCT" in file_name:
+            components = file_name.split("_", 2)
+            original_file_link = f"https://clinicaltrials.gov/ProvidedDocs/{components[0]}/{components[1]}/{components[2]}"
+            original_file_style = {}
     else:
         report_progress(f"Parsing file {file_name} ({int(np.round(len(contents) / 1000))} KB).")
 
@@ -177,7 +203,7 @@ def user_uploaded_file(  # set_progress,
     desc = f"Protocol: {file_name}"
 
     start_time = time.time()
-    tokenised_pages, condition_to_pages, phase_to_pages, sap_to_pages, effect_estimate_to_pages, num_subjects_to_pages, country_to_pages, simulation_to_pages = master_processor.process_protocol(
+    tokenised_pages, condition_to_pages, phase_to_pages, sap_to_pages, effect_estimate_to_pages, num_subjects_to_pages, num_arms_to_pages, country_to_pages, simulation_to_pages = master_processor.process_protocol(
         pages, report_progress)
     end_time = time.time()
 
@@ -191,16 +217,24 @@ def user_uploaded_file(  # set_progress,
     sap = sap_to_pages['prediction']
     effect_estimate = effect_estimate_to_pages['prediction']
     num_subjects = num_subjects_to_pages['prediction']
+    num_arms = num_arms_to_pages['prediction']
     countries = country_to_pages['prediction']
     simulation = simulation_to_pages['prediction']
 
     num_subjects_explanation = num_subjects_to_pages.get("comment", "")
+    num_subjects_low_confidence_style = {"display": "none"}
+    if num_subjects_to_pages["is_low_confidence"]:
+        num_subjects_low_confidence_style = {}
 
     return [file_name, str(file_date), desc, page_count, tokenised_pages, condition, condition_to_pages,
             phase, phase_to_pages, sap, sap_to_pages, effect_estimate, effect_estimate_to_pages,
-            num_subjects, num_subjects_to_pages, countries, country_to_pages, simulation, simulation_to_pages,
+            num_subjects, num_subjects_to_pages, num_arms, num_arms_to_pages, countries, country_to_pages, simulation,
+            simulation_to_pages,
             num_subjects_explanation,
-            tasks_completed
+            num_subjects_low_confidence_style,
+            tasks_completed,
+            original_file_link,
+            original_file_style
             ]
 
 
@@ -220,11 +254,13 @@ def user_uploaded_file(  # set_progress,
         Input('sap', 'value'),
         Input('effect_estimate', 'value'),
         Input('num_subjects_and_tertile', 'data'),
+        Input('num_arms', 'value'),
         Input('num_sites', 'value'),
         Input('num_endpoints', 'value'),
         Input('duration', 'value'),
         Input('countries', 'value'),
         Input('simulation', 'value'),
+        Input("configuration_table", "data")
     ]
 )
 def fill_table(
@@ -235,11 +271,24 @@ def fill_table(
         sap,
         effect_estimate,
         num_subjects_and_tertile,
+        num_arms,
         num_sites,
         num_endpoints,
         duration,
         countries,
-        simulation, ):
+        simulation,
+        configuration_table_data):
+    high_risk_threshold = int(configuration_table_data[0]["Value"])
+    low_risk_threshold = int(configuration_table_data[1]["Value"])
+    weight_number_of_arms = float(configuration_table_data[2]["Value"])
+    weight_phase = float(configuration_table_data[3]["Value"])
+    weight_sap = float(configuration_table_data[4]["Value"])
+    weight_effect_estimate = float(configuration_table_data[5]["Value"])
+    weight_num_subjects = float(configuration_table_data[6]["Value"])
+    weight_international = float(configuration_table_data[7]["Value"])
+    weight_simulation = float(configuration_table_data[8]["Value"])
+    weight_bias = float(configuration_table_data[9]["Value"])
+
     try:
         if file_name is None:
             df = pd.DataFrame()
@@ -262,7 +311,19 @@ def fill_table(
             is_international = int(len(countries) > 1)
             total_score, df, description = calculate_risk_level(file_name, condition, phase, sap, effect_estimate,
                                                                 num_subjects_and_tertile,
-                                                                is_international, simulation)
+                                                                num_arms,
+                                                                is_international, simulation,
+                                                                high_risk_threshold,
+                                                                low_risk_threshold,
+                                                                weight_number_of_arms,
+                                                                weight_phase,
+                                                                weight_sap,
+                                                                weight_effect_estimate,
+                                                                weight_num_subjects,
+                                                                weight_international,
+                                                                weight_simulation,
+                                                                weight_bias,
+                                                                )
 
         table_data = list([dict(d) for _, d in df.iterrows()])
         table_columns = [{"name": i, "id": i} for i in df.columns]
@@ -299,6 +360,8 @@ def fill_table(
         State("effect_estimate_to_pages", "data"),
         State("num_subjects", "value"),
         State("num_subjects_to_pages", "data"),
+        State("num_subjects", "value"),
+        State("num_arms_to_pages", "data"),
         State("countries", "value"),
         State("country_to_pages", "data"),
         State("simulation", "value"),
@@ -352,10 +415,11 @@ def download_table(download_button_clicks, data, columns):
     ],
     [
         Input("score", "data"),
+        Input("configuration_table", "data")
     ]
 )
 def show_gauge(
-        score):
+        score, configuration_table_data):
     """
     Once the score has been calculated a risk level can be displayed as a traffic light
     :param score:
@@ -367,7 +431,10 @@ def show_gauge(
     if type(score) is str:
         return ["#999999", {"label": score, "style": {"font-size": "18pt"}}]
 
-    risk_level, traffic_light = get_risk_level_and_traffic_light(score)
+    high_risk_threshold = int(configuration_table_data[0]["Value"])
+    low_risk_threshold = int(configuration_table_data[1]["Value"])
+
+    risk_level, traffic_light = get_risk_level_and_traffic_light(score, high_risk_threshold, low_risk_threshold)
 
     return [traffic_light, {"label": risk_level, "style": {"font-size": "18pt"}}]
 
@@ -389,6 +456,7 @@ def show_gauge(
         Input("num_endpoints_to_pages", "data"),
         Input("num_sites_to_pages", "data"),
         Input("num_subjects_to_pages", "data"),
+        Input("num_arms_to_pages", "data"),
         Input("phase_to_pages", "data"),
         Input("sap_to_pages", "data"),
         Input("simulation_to_pages", "data"),

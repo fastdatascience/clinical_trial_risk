@@ -1,7 +1,8 @@
 import os
 import pickle as pkl
 import re
-
+import bz2
+import pickle as pkl
 import dash_core_components as dcc
 import dash_daq as daq
 import dash_html_components as html
@@ -9,9 +10,14 @@ import pycountry
 from dash import dash_table
 
 from util.constants import EXPLANATION_OPTIONS
+from util.parameter_provider import DefaultParameterProvider
 from util.tertile_provider import DefaultSampleSizeTertileProvider
 
 tertile_finder = DefaultSampleSizeTertileProvider("sample_size_tertiles.csv")
+
+
+
+parameter_provider = DefaultParameterProvider("parameter_weights.csv")
 
 # Google Tag Manager
 google_tag_manager_iframe = html.Iframe(src="https://www.googletagmanager.com/ns.html?id=GTM-PNPSD9B", width=0,
@@ -21,21 +27,31 @@ input_folder = "../data/preprocessed_tika/"
 
 file_to_text = {}
 dataset_selector_style = None
-try:
-    if os.stat(input_folder):
-        for root, folder, files in os.walk(input_folder):
-            for file_name in files:
-                if not file_name.endswith("pkl"):
-                    continue
-                pdf_file = re.sub(".pkl", "", file_name)
 
-                full_file = input_folder + "/" + file_name
-                #         print (full_file)
-                with open(full_file, 'rb') as f:
-                    text = pkl.load(f)
-                file_to_text[pdf_file] = text
+try:
+    with bz2.open("demo_data/demo_protocols.pkl.bz2", "rb") as f:
+        file_to_text = pkl.load(f)
 except:
-    print("Could not find any preprocessed protocols")
+    print ("Error loading demo protocols")
+
+if False:
+    try:
+        if os.stat(input_folder):
+            for root, folder, files in os.walk(input_folder):
+                for file_name in files:
+                    if not file_name.endswith("pkl"):
+                        continue
+                    pdf_file = re.sub(".pkl", "", file_name)
+
+                    full_file = input_folder + "/" + file_name
+                    #         print (full_file)
+                    with open(full_file, 'rb') as f:
+                        text = pkl.load(f)
+                    file_to_text[pdf_file] = text
+    except:
+        print("Could not find any preprocessed protocols")
+
+if len(file_to_text) == 0:
     print("The protocol selector menu will be hidden.")
     dataset_selector_style = {"display": "none"}
 
@@ -53,18 +69,21 @@ condition_options = [
 ]
 
 phase_options = [
+    {"label": "Early Phase 1 🔴", "value": 0.5},
     {"label": "1 🔴", "value": 1.0},
     {"label": "1/2 🔴", "value": 1.5},
     {"label": "2 🟡", "value": 2.0},
     {"label": "2/3 🟢", "value": 2.5},
     {"label": "3 🟢", "value": 3.0},
-    {"label": "Other/unknown", "value": 0},
+    {"label": "4 🟢", "value": 4.0},
+    {"label": "N/A or unknown", "value": 0},
 ]
 
 countries_options = [
     {"label": country.flag + country.name, "value": country.alpha_2}
     for country in pycountry.countries
 ]
+countries_options.append({"label": "unnamed countries", "value": "XX"})
 
 yes_no_options = [
     {"label": x, "value": y}
@@ -94,6 +113,7 @@ rows = [
     dcc.Store(id="num_endpoints_to_pages"),
     dcc.Store(id="num_sites_to_pages"),
     dcc.Store(id="num_subjects_to_pages"),
+    dcc.Store(id="num_arms_to_pages"),
     dcc.Store(id="phase_to_pages"),
     dcc.Store(id="sap_to_pages"),
     dcc.Store(id="simulation_to_pages"),
@@ -141,9 +161,9 @@ rows = [
                                 "Upload a Clinical Trial Protocol in PDF format, and the tool will generate a risk assessment of the trial.", ),
                             html.Div(
                                 ["You can find example protocols by searching on ", html.A(["ClinicalTrials.gov"],
-                                                                                                href="https://clinicaltrials.gov/ct2/results?cond=Hiv&age_v=&gndr=&type=&rslt=&u_prot=Y&Search=Apply",
-                                                                                                target="ct.gov"
-                                                                                                ), "."]),
+                                                                                           href="https://clinicaltrials.gov/ct2/results?cond=Hiv&age_v=&gndr=&type=&rslt=&u_prot=Y&Search=Apply",
+                                                                                           target="ct.gov"
+                                                                                           ), "."]),
                         ]
                     )
                 ],
@@ -153,7 +173,8 @@ rows = [
             html.Div(
                 [
                     # "Prototype for use on HIV and TB trials in LMICs"
-                    "Prototype for use on HIV and TB trials in ", html.A(["LMICs"], href="https://data.worldbank.org/country/XO", target="wb"),
+                    "Prototype for use on HIV and TB trials in ",
+                    html.A(["LMICs"], href="https://data.worldbank.org/country/XO", target="wb"),
                     html.Br(),
                     "Single-document protocols only.",
                     html.Br(),
@@ -184,6 +205,8 @@ rows.append(
                         className="dcc_control",
                         style=dataset_selector_style
                     ),
+                    html.A(children=[html.P("Click to view PDF", className="control_label")], target="ctgov", style={"display":"none"}, id="original_file_link"),
+                    html.P("or", style={"align":"center"}, className="control_label"),
                     dcc.Upload(id='upload-data',
                                children=html.Div([
                                    'Drag and Drop Protocol PDF', html.Br(), ' or ', html.Br(),
@@ -277,7 +300,7 @@ rows.append(
 
     html.H3(
         ["Explanation of analysis ",
-             html.Span(" Move the mouse over an item or click 'explain' for more information",
+         html.Span(" Move the mouse over an item or click 'explain' for more information",
                    style={"font-size": "12pt", "font-weight": "normal"})]
     ),
 )
@@ -300,33 +323,35 @@ rows.append(
                                 options=condition_options,
                                 multi=False,
                                 className="dcc_control",
+                                style={"width": "100%"}
                             ),
                             html.Span(
                                 "The AI identified the protocol as being a trial for a particular condition. Click on 'explain' to find out which words on which pages led the AI to this decision.",
                                 className="tooltiptext"
                             )
                         ],
-                        className="tooltip",
+                        className="tooltip", style={"width": "100%"}
 
                     ),
 
                     html.Span(
                         [
                             html.P(["Trial phase ",
-                                    html.A(html.Sup("explain"), id="explain_phase", style={"font-size": "smaller"})],
+                                    html.A(html.Sup("explain"), id="explain_phase")],
                                    className="control_label"),
                             dcc.Dropdown(
                                 id="phase",
                                 options=phase_options,
                                 multi=False,
                                 className="dcc_control",
+                                style={"width": "100%"}
                             ),
                             html.Span(
                                 "The AI identified the protocol as being a trial for a particular phase. All other things being equal, later phase trials are slightly lower risk. Click 'explain' to find out which words on which pages led the AI to this decision.",
                                 className="tooltiptext"
                             )
                         ],
-                        className="tooltip",
+                        className="tooltip", style={"width": "100%"}
                     ),
                     html.Span(
                         [
@@ -344,14 +369,14 @@ rows.append(
                                 className="tooltiptext"
                             )
                         ],
-                        className="tooltip",
+                        className="tooltip"
                     ),
 
                     html.Span(
                         [
                             html.P(["Has the Effect Estimate been disclosed? ",
                                     html.A(html.Sup("explain"), id="explain_effect_estimate",
-                                        )],
+                                           )],
                                    className="control_label"),
                             dcc.Dropdown(
                                 id="effect_estimate",
@@ -372,23 +397,60 @@ rows.append(
                     html.Span(
                         [
                             html.P(["Number of subjects ", html.Span("", id="subjects_traffic_light"), " ",
+                                    html.Span(html.Span("⚠ Low confidence! ", style={"color":"red"}), id="is_num_subjects_low_confidence",
+                                              style={"display": "none"}),
                                     html.A(html.Sup("explain"), id="explain_num_subjects",
                                            )],
                                    className="control_label"),
+                            # dcc.Dropdown(
+                            #     id="num_subjects",
+                            #     multi=False,
+                            #     className="dcc_control",
+                            #     style={"width": "100%"},
+                            #     options={"label":"100","value":"100"}
+                            # ),
                             daq.NumericInput(
                                 id="num_subjects",
-                                value=100,
+                                value=None,
                                 min=10,
                                 max=100000,
                                 className="dcc_control",
+                                style={"width": "100%"},
                             ),
                             html.P("", id="num_subjects_explanation", className="control_label"),
                             html.P(["Sample size tertile: ", html.Span([], id="sample_size_tertile"), " ",
                                     html.A(html.Sup("set values of tertiles"), id="explain_tertiles",
-                                         )
+                                           )
                                     ], className="control_label"),
                             html.Span(
-                                "The AI attempted to extract the sample size from the protocol. Trials with an adequate sample size are more likely to be informative. Sample sizes are converted from raw numbers to a tertile (0, 1, 2) indicating a small, medium or large trial for this phase and pathology. Click 'explain' to find out which words on which pages led the AI to this decision.",
+                                dcc.Markdown(
+                                    """Please note that the number of subjects may have been extracted with low confidence. You are advised to check this in the document.\n\nThe AI attempted to extract the sample size from the protocol. Trials with an adequate sample size are more likely to be informative. Sample sizes are converted from raw numbers to a tertile (0, 1, 2) indicating a small, medium or large trial for this phase and pathology. Click 'explain' to find out which words on which pages led the AI to this decision."""),
+                                className="tooltiptext"
+                            )
+                        ],
+                        className="tooltip",
+
+                    ),
+                    html.Br(),
+                    html.Span(
+                        [
+                            html.P(["Number of arms ", html.Span("", id="arms_traffic_light"), " ",
+                                    html.A(html.Sup("explain"), id="explain_num_arms",
+                                           )],
+                                   className="control_label"),
+                            dcc.Dropdown(
+                                id="num_arms",
+                                value=2,
+                                options=[{"label": "1", "value": 1},
+                                         {"label": "2", "value": 2},
+                                         {"label": "3", "value": 3},
+                                         {"label": "4", "value": 4},
+                                         {"label": "5+", "value": 5}, ],
+                                className="dcc_control",
+                            ),
+                            html.P("", id="num_arms_explanation", className="control_label"),
+                            html.Span(
+                                "The AI attempted to extract the number of arms from the protocol. Click 'explain' to find out which words on which pages led the AI to this decision.",
                                 className="tooltiptext"
                             )
                         ],
@@ -449,7 +511,7 @@ rows.append(
                         [
                             html.P(["Trial uses simulation for sample size? ",
                                     html.A(html.Sup("explain"), id="explain_simulation",
-                                      )],
+                                           )],
                                    className="control_label",
                                    ),
                             dcc.Dropdown(
@@ -561,12 +623,21 @@ rows.append(
                                     export_format="xlsx", page_size=20,
                                     data=tertile_finder.DF_TERTILES_DATA_FOR_DASH,
                                     columns=tertile_finder.DF_TERTILES_COLUMNS_FOR_DASH
-
                                 ),
+                                html.P("You can configure the weights and thresholds for the model below. This allows you to set the importance of the SAP vs the nunber of arms, for example."),
+                                dash_table.DataTable(
+                                    id="configuration_table",
+                                    editable=True,
+                                    row_deletable=False,
+                                    export_format="xlsx", page_size=20,
+                                    data=parameter_provider.DEFAULT_WEIGHTS_DATA,
+                                    columns=parameter_provider.DF_PARAMETERS_COLUMNS_FOR_DASH
+                                ),
+
                             ],
                         ),
 
-                    ], label="Sample size tertiles", value="tab_tertiles"),
+                    ], label="Configure thresholds and parameters", value="tab_tertiles"),
 
                 ], id="tabs"
 

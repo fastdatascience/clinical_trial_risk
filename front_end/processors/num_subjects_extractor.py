@@ -1,24 +1,26 @@
 import bz2
 import pickle as pkl
-import pandas as pd
+import re
 from collections import Counter
+from os.path import exists
+
 import numpy as np
+import pandas as pd
 import spacy
 from spacy.matcher import Matcher
-import re
-from os.path import exists
 
 from util.demonym_finder import demonym_to_country_code
 from util.page_tokeniser import iterate_tokens
-
-nlp = spacy.load('en_core_web_sm', disable=['ner', 'tagger', 'parser', 'lemmatizer'])
+from util.spacy_wrapper import nlp
 
 patterns = dict()
 
 patterns["sample size"] = ['sample size is #', 'sample size #', 'sample size of #', 'sample size to #',
-                           'sample size increase to #']
+                           'sample size increase to #', 'sample size will be #']
 patterns["sample"] = ['sample #', 'sample of #', 'sampling #']
-patterns["enroll"] = ['enroll #', 'enrol #', 'enrolling #', 'enroll up to #', 'enrolling up to #', 'enrol up to #', 'enrolment #', 'enrollment #', 'enrolment of #', 'enrollment of #']
+patterns["enroll"] = ['enroll #', 'enrol #', 'enrolling #', 'enroll up to #', 'enrolling up to #', 'enrol up to #',
+                      'enrolment #', 'enrollment #', 'enrolment of #', 'enrollment of #', 'enrolment goal #',
+                      'enrolment goal : #']
 patterns["will_enroll"] = ["will enroll #", "will enrol #", "aim to enroll #", "aim to enrol #"]
 patterns["recruit"] = ['recruit #', 'recruiting #', 'recruitment #', 'recruitment of']
 patterns["will_recruit"] = ["will recruit #", "aim to recruit #"]
@@ -32,25 +34,44 @@ patterns["n ="] = ['n = #', 'n > #', 'n ≥ #']
 patterns["participants"] = ['# total participants', 'number of participants #', '# participants',
                             'participants up to #']
 patterns["subjects"] = ['# total subjects', 'number of subjects #', '# subjects', 'subjects up to #']
-patterns["misc_personal_noun"] = ['# people', '# persons', '# residents', '# mother infant pairs','# mother child pairs','# mother - child pairs',
-                                  '# mother - infant pairs', '# individuals', "# sexually active", "# patients", "# pts", "# cases", "# * cases"]
+patterns["misc_personal_noun"] = ['# people', '# persons', '# residents', '# mother infant pairs',
+                                  '# mother child pairs', '# mother - child pairs',
+                                  '# mother - infant pairs', '# individuals', "# sexually active", "# patients",
+                                  "# pts", "# cases", "# * cases", '# * patients', '# * pts',
+                                  '# outpatients', '# * outpatients', '# * subjects', "# volunteers",
+                                  "# high risk", "# high - risk"]  # "# vaccine recipients", "# recipients"]
 patterns["gender"] = ['# male', '# males', '# female', '# females', '# women', '# men', '# mothers', '# pregnant']
 patterns["age"] = ['# infants', '# adult', '# adults', '# adolescents', '# babies', '# children']
-patterns["disease_state"] = ['# healthy', '# hiv infected', '# hiv positive', '# hiv negative', '# hiv - infected', '# hiv - positive', '# hiv - negative',]
+patterns["disease_state"] = ['# healthy', '# hiv infected', '# hiv positive', '# hiv negative', '# hiv - infected',
+                             '# hiv - positive', '# hiv - negative', '# evaluable',
+                             '# evaluable', '# efficacy-evaluable', '# efficacy - evaluable', '# activated']
 patterns["selection"] = ['selection #', 'selection of #', ]
 patterns["demonym"] = ["# " + demonym.lower() for demonym in demonym_to_country_code]
 patterns["approximately"] = ["approximately #", "up to #"]
 patterns["to achieve"] = ["# to achieve"]
+patterns["study population"] = ["study population #", "study population of #"]
+patterns["optional_colon"] = ["number of subjects : #", "planned subjects : #", "subjects planned : #", "enrolment : #",
+                              "enrollment : #", "sample size : #",
+                              "number of subjects #", "planned subjects #", "subjects planned #", "enrolment #",
+                              "enrollment #", "sample size #"]
 
 # These patterns do not contain a number. The feature generated from them is just the shortest distance from a candidate number to the nearest occurrence of these words.
 patterns["distance to sample size no number"] = ["sample size"]
 patterns["distance to power no number"] = ["power", "powered"]
-patterns["distance to num subjects no number"] = ["number of subjects", "number of participants", "number of patients", "number of pts"]
+patterns["distance to num subjects no number"] = ["number of subjects", "number of participants", "number of patients",
+                                                  "number of pts"]
 patterns["distance to subjects no number"] = ["subjects", "participants", "patients", "pts"]
 patterns["distance to cases no number"] = ["cases"]
+patterns["distance to total no number"] = ["total"]
 # These are anticipated to be negative features.
 patterns["distance to per no number"] = ["per"]
+patterns["distance to each no number"] = ["each", "every"]
+patterns["distance to site no number"] = ["site"]
 patterns["distance to arm/group no number"] = ["arm", "group"]
+patterns["distance to future indicator no number"] = ["will"]
+patterns["distance to past indicator no number"] = ["was", "were", "to date", "literature"]
+patterns["distance to contents"] = ["table of contents", "index"]
+patterns["distance to et al"] = ["et al"]
 
 patterns_without_number = set([x for x in patterns if "no number" in x])
 
@@ -64,7 +85,8 @@ matcher = Matcher(nlp.vocab)
 
 num_regex = re.compile(r'^[1-9]\d*,?\d+$')
 
-ABSOLUTE_MINIMUM = 35
+ABSOLUTE_MINIMUM = 8
+ABSOLUTE_MAXIMUM = 1000000
 
 for feature_name, feature_patterns in patterns.items():
     patterns = []
@@ -82,12 +104,34 @@ for feature_name, feature_patterns in patterns.items():
                     if is_range == 1:
                         pattern.append({"LOWER": {"IN": ["-", "–", "to"]}})
                         pattern.append({"LIKE_NUM": True})
-                elif word == "*": # wildcard
+                elif word == "*":  # wildcard
                     pattern.append({"LIKE_NUM": False})
                 else:
                     pattern.append({"LOWER": word})
             patterns.append(pattern)
     matcher.add(feature_name, patterns)
+
+# Exclude things that are clearly not sample size, e.g. 50 ml
+# We must be careful with the negative matcher as this is very hard to debug.
+# Anything excluded with this pattern is excluded right at the beginning of the process. So SI units are a good example as they give us 100% confidence it's not the sample size under discussion.
+negative_matcher = Matcher(nlp.vocab)
+negative_patterns = []
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
+    "IN": ["mg", "kg", "ml", "l", "g", "kg", "mg", "s", "days", "months", "years", "hours", "seconds", "minutes", "sec",
+           "min", "mcg",
+           "mol", "mmol", "mi", "h", "hr", "hrs", "s", "m", "km", "lb", "oz", "moles", "mole", "wk", "wks", "week",
+           "weeks",
+           "cells", "appointments", "µg", "episodes", "incidents", "sites", "locations", "countries", "centres",
+           "centers",
+           "effect", "visits", "revolutions", "cgy", "mm3", "mm", "cm", "cm3", "sec", "pages", "mcg", "µl", "c", "°C",
+           "°", "platelets", "dl", "pg", "mmhg", "hg", "gl", "msec", "ms", "µs"]}}])
+# Exclude contents page
+negative_patterns.append([{"LIKE_NUM": True}, {"TEXT": {"REGEX": r"^\d+\.\d+$"}}])
+
+# The first 31 participants
+negative_patterns.append([{"LOWER": "the"}, {"LOWER": "first"}, {"LIKE_NUM": True}])
+
+negative_matcher.add("MASK", negative_patterns)
 
 
 def extract_features(tokenised_pages: list):
@@ -106,7 +150,22 @@ def extract_features(tokenised_pages: list):
 
     token_indexes = {}
 
+    tokens_to_exclude = set()
+    negative_matches = negative_matcher(doc)
+    for phrase_match in negative_matches:
+        for i in range(phrase_match[1], phrase_match[2] + 1):
+            tokens_to_exclude.add(i)
+
     for phrase_match in matches:
+
+        is_ignore = False
+
+        for i in range(phrase_match[1], phrase_match[2]):
+            if i in tokens_to_exclude:
+                is_ignore = True
+                break
+        if is_ignore:
+            continue
 
         value = None
         matcher_name = nlp.vocab.strings[phrase_match[0]]
@@ -122,9 +181,17 @@ def extract_features(tokenised_pages: list):
             page_no, token_no, token = all_tokens[token_idx]
             if num_regex.match(token):
                 value = re.sub(r',', '', token)
+
+                parsed = int(value)
+                if parsed < ABSOLUTE_MINIMUM or parsed > ABSOLUTE_MAXIMUM:
+                    value = None
+                    continue
+
                 if value not in token_indexes:
                     token_indexes[value] = set()
                 token_indexes[value].add(token_idx)
+                continue
+
         if value:
             if value not in features:
                 features[value] = Counter()
@@ -135,12 +202,16 @@ def extract_features(tokenised_pages: list):
             features[value]["num_occurrences"] += 1
             if value not in num_subjects_to_pages:
                 num_subjects_to_pages[value] = []
-            num_subjects_to_pages[value].append(page_no)
+            if page_no not in num_subjects_to_pages[value]:
+                num_subjects_to_pages[value].append(page_no)
 
             if value not in contexts:
-                start = max(0,  phrase_match[1] - 5)
-                end = min(len(tokens) - 1, phrase_match[2] + 5)
-                contexts[value] = f"Page {page_no + 1}: " + " ".join(tokens[start:end])
+                contexts[value] = ""
+            start = max(0, phrase_match[1] - 15)
+            end = min(len(tokens) - 1, phrase_match[2] + 15)
+
+            contexts[value] = (
+                    contexts[value] + " " + f"Page {page_no + 1}: " + " ".join(tokens[start:end])).strip()
 
     for candidate in features:
         for distance_feature in patterns_without_number:
@@ -157,8 +228,7 @@ def extract_features(tokenised_pages: list):
     candidates = []
     feature_vectors = []
     for cand, features in features.items():
-        if features["magnitude"] < ABSOLUTE_MINIMUM:
-            continue
+
         feature_vector = []
         for feature_name in FEATURE_NAMES:
             feature_vector.append(features.get(feature_name, 0))
@@ -195,7 +265,7 @@ class NumSubjectsExtractor:
 
         if len(df_instances) == 0:
             return {"prediction": 0, "pages": {}, "context": [],
-                    "score": 0, "comment": "No possible subject numbers found."}
+                    "score": 0, "comment": "No possible subject numbers found.", "proba": {}, "is_per_arm": {}}
 
         probas = self.model.predict_proba(df_instances[FEATURE_NAMES])[:, 1]
         winning_index = np.argmax(probas)
@@ -205,11 +275,12 @@ class NumSubjectsExtractor:
         if len(top_indices) > 5:
             top_indices = top_indices[:5]
 
-
+        value_to_score = {}
         possible_candidates = []
         for idx in top_indices:
-            if probas[idx]  > score * 0.1 and len(possible_candidates) < 3:
+            if probas[idx] > score * 0.1 and len(possible_candidates) < 5:
                 possible_candidates.append(df_instances.candidate.iloc[idx])
+                value_to_score[df_instances.candidate.iloc[idx]] = probas[idx]
         possible_candidates = "Possible sample sizes found: " + ", ".join(possible_candidates)
 
         num_subjects = df_instances.candidate.iloc[winning_index]
@@ -224,4 +295,14 @@ class NumSubjectsExtractor:
             if k not in top_values:
                 del contexts[k]
 
-        return {"prediction": int(num_subjects), "pages": num_subjects_to_pages, "context": contexts, "score": score, "comment": possible_candidates}
+        is_low_confidence = int(sum([p for p in probas if p > 0.5]) != 1)
+
+        is_per_arm = []
+        for k, v in contexts.items():
+            v = v.lower()
+            if "per arm" in v or "in each arm" in v or "per cohort" in v or "in each cohort" in v or "per group" in v or "in each group" in v:
+                is_per_arm.append(k)
+
+        return {"prediction": int(num_subjects), "pages": num_subjects_to_pages, "context": contexts, "score": score,
+                "comment": possible_candidates, "is_per_arm": is_per_arm, "proba": value_to_score,
+                "is_low_confidence": is_low_confidence}
