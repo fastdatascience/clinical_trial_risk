@@ -3,6 +3,8 @@ import pickle as pkl
 import re
 import bz2
 import pickle as pkl
+from traceback import print_exc
+
 import dash_core_components as dcc
 import dash_daq as daq
 import dash_html_components as html
@@ -29,10 +31,18 @@ file_to_text = {}
 dataset_selector_style = None
 
 try:
-    with bz2.open("demo_data/demo_protocols.pkl.bz2", "rb") as f:
+    # with bz2.open("demo_data/demo_protocols.pkl.bz2", "rb") as f:
+    # FOR TRAINING ONLY
+    with bz2.open("../data/ctgov/protocols_small.pkl.bz2", "rb") as f:
         file_to_text = pkl.load(f)
+    with open("../train/num_subjects_classifier_annotations.py", "r") as f:
+        for l in f:
+            file_name = re.sub(r'\'.+', '', re.sub(r'^\s+\'', '', l.strip()))
+            if file_name in file_to_text:
+                del file_to_text[file_name]
 except:
     print ("Error loading demo protocols")
+    print_exc()
 
 if False:
     try:
@@ -127,6 +137,7 @@ rows = [
     dcc.Store(id="stage_7_complete"),
     dcc.Store(id="stage_8_complete"),
     dcc.Store(id="num_subjects_and_tertile"),
+    dcc.Store(id="dummy"),
     dcc.Download("download_excel"),
     dcc.Download("download_pdf"),
     html.Div(id="output-clientside"),
@@ -526,6 +537,8 @@ rows.append(
                         ], className="tooltip"
 
                     ),
+
+                    html.Button("Save annotation", id="save_annotation"),
 
                 ],
                 className="pretty_container three columns",

@@ -494,6 +494,28 @@ def update_wordcloud(tokenised_pages, condition_to_pages):
     return word_cloud_generator.generate_word_cloud(tokenised_pages, condition_to_pages)
 
 
+@dash_app.callback(
+    [
+        Output("dummy", "data"),
+    ],
+    [
+        Input("save_annotation", "n_clicks"),
+        State("num_subjects", "value"),
+        State("dataset", "value")
+    ]
+)
+def save_annotation(n_clicks, num_subjects, file_name):
+    """
+    Append to the annotations files.
+    This is to allow quick data annotation for training.
+    :param n_clicks:
+    :param num_subjects:
+    :param file_name:
+    """
+    with open("../train/num_subjects_classifier_annotations.py", "a") as f:
+        f.write(f"'{file_name}':'{num_subjects}',\n")
+
+
 # Make sure the Javascript callbacks are added too.
 add_clientside_callbacks(dash_app)
 
