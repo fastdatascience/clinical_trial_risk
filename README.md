@@ -1,6 +1,6 @@
 # Protocol Analysis Tool for Clinical Trial Risk
 
-Live demo available at: https://protocols.fastdatascience.com/
+Live demo available at: https://app.clinicaltrialrisk.org/
 
 Based on the Dash Natural Gas demo: https://github.com/plotly/dash-sample-apps
 
