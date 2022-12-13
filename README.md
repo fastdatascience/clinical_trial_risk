@@ -13,20 +13,27 @@ This tool is written in Python using the Dash front end library and the Java lib
 
 ## Very quick guide to running the tool on your computer
 
-1. Install Git and [Git LFS](https://git-lfs.github.com/) and clone this repository with the following command:
+1. Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+
+2. Install [Git LFS](https://git-lfs.github.com/). *This is important - if you just have regular Git installed then only part of the repository will not be cloned, as the large binary files are stored in Git LFS (Large File Storage).*
+
+3. clone this repository with the following command:
 ```
 git clone git@github.com:fastdatascience/clinical_trial_risk.git
 ```
-2. Install [Docker](https://docs.docker.com/get-docker/).
-3. Install [Docker Compose](https://docs.docker.com/compose/gettingstarted/).
-4. Open a command line or Terminal window. Change folder to where you downloaded and unzipped the repository, and go to the folder `front_end`.  Run the following command:
+
+Alternatively to the above, you can click the Download button in the top right if you are using Github in the browser, and download and unzip the code:
+
+![Download button in github.com](screenshots/clone-screenshot.png)
+
+4. Install [Docker](https://docs.docker.com/get-docker/).
+5. Install [Docker Compose](https://docs.docker.com/compose/gettingstarted/).
+6. Open a command line or Terminal window. Change folder to where you downloaded and unzipped the repository, and go to the folder `front_end`.  Run the following command:
 ```
 docker-compose up
 ```
-5. Open your browser at `https://localhost:80`
+7. Open your browser at `https://localhost:80`
 ![The web app running](screenshots/applocal.png)
-
-The username is `admin` and the password is `DsRNJmZ`.
 
 ## Developer's guide: Running the tool on your computer in Python and without using Docker
 
