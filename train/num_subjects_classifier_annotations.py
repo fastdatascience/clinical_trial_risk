@@ -49,14 +49,15 @@ annotations = {'HIV-HIV-2017-Bekker-HVTN100.pdf': '252',
                'TB-TB-2019-Suliman-A Phase I_IIa Double-Blind.pdf': '98',
                'MAT-Anemia-2015-Etheredge-Prenatal Iron Supplements Safety and.pdf': '1500',
                'HIV-HIV-2016-R-E.pdf': '1000-1500',
-               'HIV-HIV-2019-H-S.pdf': '2700 per community', # 150395 according to CT.gov
+               'HIV-HIV-2019-H-S.pdf': '2700 per community',  # 150395 according to CT.gov
                'NTD-Filariasis-2019-Weil-DOLF IDA Haiti.pdf': '3000 participants in each arm',
                # 'MAT-MAT-2018-G-F.pdf': None, # not mentioned
                'EDD-R-2017-G-V.pdf': "450",
                'MAT-HIV-2016-Fowler-PROMISE.pdf': "3400",
                'TB-TB-2018-H-A.pdf': "990",
-               'NUT-S-2018-R-S.pdf': "600", # per arm
-               'VAC-Tdap-2019-Sancovski-A Post-marketing, Observational, Retrospective.pdf': "2400", # 1200 in each cohort
+               'NUT-S-2018-R-S.pdf': "600",  # per arm
+               'VAC-Tdap-2019-Sancovski-A Post-marketing, Observational, Retrospective.pdf': "2400",
+               # 1200 in each cohort
                'NTD-t-2017-M-E.pdf': '510',
                'MAL-M-2018-D-C.pdf': '300',
                'NTD-D-2017-S-P.pdf': '1600',
@@ -65,13 +66,51 @@ annotations = {'HIV-HIV-2017-Bekker-HVTN100.pdf': '252',
                'PNE-P-2019-C-P.pdf': '1125',
                'HIV-HIV-2019-K-C.pdf': '6400',
                'PNE-Pneumonia-2019-Alexander-LEAP2.pdf': '738',
-               'MAT-Cervical Disease-2019-Greene-LEEP.pdf': '400', # 200 in each arm
+               'MAT-Cervical Disease-2019-Greene-LEEP.pdf': '400',  # 200 in each arm
                'MAL-Malaria-2019-Foy-RIMDAMAL.pdf': '552',
-               'TB-TB-2019-N-S.pdf': '400', # 2 arms
-               'NUT-Stunting-2019-Humphrey-SHINE.pdf': '4800', # 4 arms
-               'PNE-Pneumonia-2018-Keenan-Mortality Reduction After Oral Azithromycin.pdf':'226222', # 2 arms,  62628+69472+94122
-               'EDD-Cholera-2016-Qadri-Shanchol.pdf': '190,229', # 2 arms: we need at least 95,115 individuals in an arm of the study i.e., a total of 190,229 population will be required to conduct the trial.
-               'VAC-Ecoli-2019-Qadri-ETVAX.pdf': '45', # 45 adults then part B has 150 toddlers
+               'TB-TB-2019-N-S.pdf': '400',  # 2 arms
+               'NUT-Stunting-2019-Humphrey-SHINE.pdf': '4800',  # 4 arms
+               'PNE-Pneumonia-2018-Keenan-Mortality Reduction After Oral Azithromycin.pdf': '226222',
+               # 2 arms,  62628+69472+94122
+               'EDD-Cholera-2016-Qadri-Shanchol.pdf': '190,229',
+               # 2 arms: we need at least 95,115 individuals in an arm of the study i.e., a total of 190,229 population will be required to conduct the trial.
+               'VAC-Ecoli-2019-Qadri-ETVAX.pdf': '45',  # 45 adults then part B has 150 toddlers
                'MAL-Malaria-2016-Valencia-Phase 1 and 2a Clinical.pdf': '28',
-               'NTD-Filariasis-2019-Weil-DOLF IDA Indonesia.pdf': '4000', # 2 arms: The sample size of 2000 participants in each arm
-               'VAC-M-2015-L-W.pdf': '2000'}
+               'NTD-Filariasis-2019-Weil-DOLF IDA Indonesia.pdf': '4000',
+               # 2 arms: The sample size of 2000 participants in each arm
+               'VAC-M-2015-L-W.pdf': '2000',
+
+                # Begin ClinicalTrials.gov dataset
+               # NOTE: some of these are from the validation set. Exclude them from training and just use for validation.
+               '15_NCT04061915_Prot_SAP_000.pdf': '322',
+               '91_NCT02044991_Prot_SAP_000.pdf': '50',
+               '34_NCT03102034_Prot_001.pdf': '33',
+               '56_NCT03406156_Prot_000.pdf': '120',
+               '68_NCT02213068_Prot_SAP_000.pdf': '43',
+               '97_NCT02457897_Prot_SAP_000.pdf': '20',
+               '06_NCT02621606_Prot_SAP_000.pdf': '10',
+               '46_NCT00255346_Prot_SAP_000.pdf': '145',
+               '56_NCT00752856_Prot_SAP_000.pdf': '50',
+               '25_NCT04222725_Prot_SAP_000.pdf': '60',
+               '59_NCT03332459_Prot_000.pdf': '120',
+               '61_NCT03012061_Prot_000.pdf': '384',
+               '08_NCT03904108_Prot_SAP_000.pdf': '25',
+               '99_NCT03351699_Prot_SAP_000.pdf': '30',
+               '85_NCT02418585_Prot_000.pdf': '196',
+               '47_NCT03083847_Prot_SAP_000.pdf': '67',
+               '73_NCT01902173_Prot_SAP_000.pdf': '70',
+               '34_NCT03676634_Prot_000.pdf': '50',
+               '67_NCT02092467_Prot_000.pdf': '4000',
+               '51_NCT02203851_Prot_000.pdf': '100',
+               '16_NCT03302416_Prot_SAP_000.pdf': '20',
+               '28_NCT04774328_Prot_000.pdf': '150',
+               '94_NCT02509494_Prot_000.pdf': '976',
+               '42_NCT00686842_Prot_SAP_001.pdf': '38',
+               '32_NCT00630032_Prot_SAP_000.pdf': '2500',
+               '82_NCT01263782_Prot_SAP_000.pdf': '225',
+               '28_NCT03648528_Prot_000.pdf': '120',
+               '06_NCT04327206_Prot_007.pdf': '10078',
+               '51_NCT02692651_Prot_SAP_000.pdf': '200',
+               '42_NCT03546842_Prot_SAP_000.pdf': '200',
+               '36_NCT03861936_Prot_000.pdf': '150',
+               }

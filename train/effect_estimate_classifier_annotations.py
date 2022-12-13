@@ -124,4 +124,6 @@ annotations = {
     # 'MAL-Malaria-2016-Valencia-Phase 1 and 2a Clinical.pdf': [],
     'NTD-Filariasis-2019-Weil-DOLF IDA Indonesia.pdf': [31, "30%"],  # 80% power for detecting an effect size of 30%)
     # 'VAC-M-2015-L-W.pdf': []
+
+    '15_NCT04061915_Prot_SAP_000.pdf':'.4',
 }
