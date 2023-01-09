@@ -1,3 +1,4 @@
+import base64
 import io
 import os
 import re
@@ -23,6 +24,8 @@ from util.progress_bar import make_progress_graph
 from util.protocol_master_processor import MasterProcessor
 from util.risk_assessor import calculate_risk_level
 from util.score_to_risk_level_converter import get_risk_level_and_traffic_light
+
+import json
 from util.word_cloud_generator import WordCloudGenerator
 
 COMMIT_ID = os.environ.get('COMMIT_ID', "not found")
@@ -374,6 +377,8 @@ def fill_table(
 def export_pdf(*args):
     return generate_pdf(*args)
 
+# def save_configuration:
+
 
 @dash_app.callback(
     [
@@ -407,6 +412,52 @@ def download_table(download_button_clicks, data, columns):
 
     return [dcc.send_data_frame(df.to_excel, excel_file_name, sheet_name=f"Risk score calculation", index=False)]
 
+
+@dash_app.callback(
+    [
+        Output("download", "data")
+    ],
+    [
+        Input("btn", "n_clicks"),
+        State("configuration_table", "data"),
+        State("configuration_table", "columns"),
+        State("tertiles_table", "data"),
+        State("tertiles_table", "columns")
+    ]
+)
+def generate_json(n_nlicks, wt_data, wt_columns, tt_data, tt_columns):
+    if n_nlicks == 0:
+        return [None]
+    cdf = to_df(wt_columns, wt_data)
+    tdf = to_df(tt_columns, tt_data)
+    res = {}
+    res['configuration_data'] = cdf
+    res['tertile_data'] = tdf
+
+    excel_file_name = "res.json"
+
+    return [dcc.send_data_frame(pd.DataFrame.from_dict(res).to_json, excel_file_name)]
+
+@dash_app.callback(
+    Output("output-config-data-upload", "data"),
+    Input('upload-config-data', 'contents'),
+    State('upload-config-data', 'filename'),
+    State('upload-config-data', 'last_modified'),
+    State("tertiles_table", "data"),
+)
+def upload_config( contents, file_name, file_date, tt_data):
+    content_type, content_string = contents.split(',')
+
+    decoded = base64.b64decode(content_string)
+    x = json.loads(decoded.decode('utf-8'))
+    td = x["tertile_data"]
+    tt_list = []
+
+
+    print(td)
+    print(type(tt_data))
+    print(tt_data)
+    tt_data = []
 
 @dash_app.callback(
     [
@@ -493,6 +544,19 @@ def update_wordcloud(tokenised_pages, condition_to_pages):
         return [None, None]
     return word_cloud_generator.generate_word_cloud(tokenised_pages, condition_to_pages)
 
+
+def to_df(columns, data):
+    x = {}
+    for col in columns:
+        col_name = col['name']
+        column_data = []
+        for r in data:
+            cell_data = r[col['id']]
+            column_data.append(cell_data)
+        if column_data is not None:
+            x[col_name] = column_data
+
+    return x
 
 # Make sure the Javascript callbacks are added too.
 add_clientside_callbacks(dash_app)

@@ -190,6 +190,30 @@ rows = [
     ),
 ]
 
+
+rows.append(
+    html.Div([
+        html.Button("Save Configuration", id="btn"), dcc.Download(id="download"),
+        html.Div([
+            dcc.Upload(
+                id='upload-config-data',
+                children=html.Div(['Drag and Drop Configuration', html.Br(), ' or ', html.Br(),
+                                   html.A('Select File from your Computer')]),
+                               style={
+                                   # 'width': '100%',
+                                   'height': '120px',
+                                   'lineHeight': '40px',
+                                   'borderWidth': '1px',
+                                   'borderStyle': 'dashed',
+                                   'borderRadius': '5px',
+                                   'textAlign': 'center',
+                                   'margin': '10px'
+                               },
+                               accept="application/json"),
+        ]),
+html.Div(id='output-config-data-upload')
+    ])
+)
 rows.append(
 
     html.Div(
