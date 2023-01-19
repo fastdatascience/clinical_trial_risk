@@ -82,7 +82,7 @@ annotations = {'HIV-HIV-2017-Bekker-HVTN100.pdf': '252',
 
                # Begin ClinicalTrials.gov dataset
                # NOTE: some of these are from the validation set. Exclude them from training and just use for validation.
-               '15_NCT04061915_Prot_SAP_000.pdf': '322',
+               # '15_NCT04061915_Prot_SAP_000.pdf': '322',
                '91_NCT02044991_Prot_SAP_000.pdf': '50',
                '34_NCT03102034_Prot_001.pdf': '33',
                '56_NCT03406156_Prot_000.pdf': '120',

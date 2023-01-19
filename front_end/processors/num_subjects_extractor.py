@@ -41,7 +41,7 @@ patterns["misc_personal_noun"] = ['# people', '# persons', '# residents', '# mot
                                   "# pts", "# cases", "# * cases", '# * patients', '# * pts',
                                   '# outpatients', '# * outpatients', '# * subjects', "# volunteers",
                                   "# high risk", "# high - risk",
-                                  "# neonates"]  # "# vaccine recipients", "# recipients"]
+                                  "# neonates", "# vaccine recipients", "# recipients"]
 patterns["gender"] = ['# male', '# males', '# female', '# females', '# women', '# men', '# mothers', '# pregnant']
 patterns["age"] = ['# infants', '# adult', '# adults', '# adolescents', '# babies', '# children']
 patterns["disease_state"] = ['# healthy', '# hiv infected', '# hiv positive', '# hiv negative', '# hiv - infected',
@@ -80,7 +80,8 @@ patterns["distance to plan or plans no number"] = ["plan", "plans", "planned", "
 patterns["distance to propose or proposes no number"] = ["propose", "proposes", "proposed", "proposing"]
 patterns["distance to target or targets no number"] = ["target", "targets"]
 patterns["distance to page no number"] = ["page"]
-patterns["distance to percent"] = ["%"]
+patterns["distance to percent no number"] = ["%"]
+patterns["distance to vaccine no number"] = ["vaccine", "vaccinated"]
 
 patterns_without_number = set([x for x in patterns if "no number" in x])
 
