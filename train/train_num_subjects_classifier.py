@@ -15,7 +15,7 @@ from sklearn.ensemble import RandomForestClassifier
 sys.path.append("../front_end")
 
 from num_subjects_classifier_annotations import annotations
-from processors.num_subjects_extractor import FEATURE_NAMES, extract_features
+from processors.num_subjects_extractor import FEATURE_NAMES, extract_features, num_lookup
 from util.page_tokeniser import tokenise_pages
 from sklearn.metrics import accuracy_score
 
@@ -66,7 +66,14 @@ print(f"Loaded {num_ctgov_files_loaded} ClinicalTrials.gov training files. Now {
 
 df = pd.DataFrame()
 df["file_name"] = list([a for a in annotations if annotations[a] is not None and a in file_to_text])
-df["ground_truth"] = df.file_name.map(annotations).apply(lambda x: re.sub(r'\D.+', '', x))
+
+def clean_up_ground_truth(x):
+    if any(i.isdigit() for i in x):
+        x = re.sub(r'\D.+', '', str(x))
+    return x
+
+
+df["ground_truth"] = df.file_name.map(annotations).apply(clean_up_ground_truth)
 
 print(f"Loaded {len(df)} annotations")
 
@@ -81,8 +88,7 @@ for file_name, ground_truth in annotations.items():
     raw_texts = file_to_text[file_name]
     tokenised_pages = list(tokenise_pages(raw_texts))
 
-    if any(i.isdigit() for i in ground_truth):
-        ground_truth = re.sub(r'\D.+', '', str(ground_truth))
+    ground_truth = clean_up_ground_truth(ground_truth)
     df_instances, _, _ = extract_features(tokenised_pages)
     df_instances["ground_truth"] = (df_instances["candidate"] == ground_truth).apply(int)
     df_instances["file_name"] = file_name
@@ -125,8 +131,14 @@ df["is_correct"] = df["y_pred"] == df["ground_truth"]
 acc = accuracy_score(df.ground_truth, df.y_pred)
 print(f"Accuracy using {len(df)}-fold cross-validation is {acc * 100:.2f}%")
 
-df["is_correct_within_10%_margin"] = (df.y_pred.apply(int) >= df.ground_truth.apply(int) * 0.9) & (
-        df.y_pred.apply(int) <= df.ground_truth.apply(int) * 1.1)
+def lookup_number(x):
+    if x in num_lookup:
+        return num_lookup[x]
+    else:
+        return int(x)
+
+df["is_correct_within_10%_margin"] = (df.y_pred.apply(lookup_number) >= df.ground_truth.apply(lookup_number) * 0.9) & (
+        df.y_pred.apply(lookup_number) <= df.ground_truth.apply(lookup_number) * 1.1)
 acc_10pc = df['is_correct_within_10%_margin'].mean()
 print(
     f"Proportion correct within 10% margin using {len(df)}-fold cross-validation is {acc_10pc * 100:.2f}%")
