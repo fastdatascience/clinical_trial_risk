@@ -235,7 +235,9 @@ def extract_features(tokenised_pages: list):
             if num_regex.match(token):
                 value = re.sub(r',', '', token)
 
-                parsed = num_lookup.get(value.lower(), int(value))
+                parsed = num_lookup.get(value.lower())
+                if not parsed:
+                    parsed = int(value)
                 if parsed < ABSOLUTE_MINIMUM or parsed > ABSOLUTE_MAXIMUM:
                     value = None
                     continue
