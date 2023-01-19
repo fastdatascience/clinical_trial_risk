@@ -111,7 +111,7 @@ for test_file in df.file_name:
         winner = df_test.candidate.iloc[winning_index]
         p = probas[winning_index]
     else:
-        winner = 0
+        winner = "0"
         p = 0
     y_pred.append(winner)
     y_pred_proba.append(p)
