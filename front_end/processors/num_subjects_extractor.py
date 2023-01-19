@@ -95,6 +95,9 @@ matcher = Matcher(nlp.vocab)
 
 num_regex = re.compile(r'(?i)^(?:[1-9]\d*,?\d+|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)$')
 
+num_lookup = {"twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80,
+              "ninety": 90}
+
 ABSOLUTE_MINIMUM = 8
 ABSOLUTE_MAXIMUM = 1000000
 
@@ -232,7 +235,7 @@ def extract_features(tokenised_pages: list):
             if num_regex.match(token):
                 value = re.sub(r',', '', token)
 
-                parsed = int(value)
+                parsed = num_lookup.get(value.lower(), int(value))
                 if parsed < ABSOLUTE_MINIMUM or parsed > ABSOLUTE_MAXIMUM:
                     value = None
                     continue
