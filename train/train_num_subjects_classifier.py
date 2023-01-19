@@ -1,8 +1,10 @@
 import bz2
+import datetime
 import os
 import pickle as pkl
 import re
 import sys
+import gzip
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,7 +12,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.pyplot import figure
 from sklearn.ensemble import RandomForestClassifier
-import datetime
+import json
 
 sys.path.append("../front_end")
 
@@ -44,8 +46,22 @@ for root, folder, files in os.walk(INPUT_FOLDER):
 print(f"Loaded {len(file_to_text)} files")
 
 if len(file_to_text) == 0:
-    print ("ERROR! NO TRAINING FILES WERE FOUND.\nHave you downloaded the training data to the data folder?\nPlease go to data/raw_protocols and run download_raw_protocols.sh, then go to folder data/ and run the file preprocess.py, then return to this file and run it and you can train the number of subjects classifier.")
+    print(
+        "ERROR! NO TRAINING FILES WERE FOUND.\nHave you downloaded the training data to the data folder?\nPlease go to data/raw_protocols and run download_raw_protocols.sh, then go to folder data/ and run the file preprocess.py, then return to this file and run it and you can train the number of subjects classifier.")
     exit()
+
+with open("../data/ctgov/protocols.pkl.gz", "rb") as f:
+    file_to_pages_ctgov = pkl.load(f)
+
+num_ctgov_files_loaded = 0
+for annot in annotations:
+    if "NCT" in annot:
+        file_to_text[annot] = file_to_pages_ctgov[annot]
+        num_ctgov_files_loaded += 1
+
+del file_to_pages_ctgov
+
+print(f"Loaded {num_ctgov_files_loaded} ClinicalTrials.gov training files. Now {len(file_to_text)} files are loaded.")
 
 df = pd.DataFrame()
 df["file_name"] = list([a for a in annotations if annotations[a] is not None and a in file_to_text])
@@ -58,7 +74,8 @@ for file_name, ground_truth in annotations.items():
     if ground_truth is None:
         continue
     if file_name not in file_to_text:
-        print (f"WARNING! Missing training file {file_name}.  The finished model will be more accurate if you can supply all training data.")
+        print(
+            f"WARNING! Missing training file {file_name}.  The finished model will be more accurate if you can supply all training data.")
         continue
     raw_texts = file_to_text[file_name]
     tokenised_pages = list(tokenise_pages(raw_texts))
