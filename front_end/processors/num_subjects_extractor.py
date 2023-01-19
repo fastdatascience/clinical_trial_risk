@@ -47,7 +47,7 @@ patterns["age"] = ['# infants', '# adult', '# adults', '# adolescents', '# babie
 patterns["disease_state"] = ['# healthy', '# hiv infected', '# hiv positive', '# hiv negative', '# hiv - infected',
                              '# hiv - positive', '# hiv - negative', '# evaluable',
                              '# evaluable', '# efficacy-evaluable', '# efficacy - evaluable', '# activated',
-                             "analyzable #", "analysable #"]
+                             "analyzable #", "analysable #", '# overweight', '# obese']
 patterns["selection"] = ['selection #', 'selection of #', ]
 patterns["demonym"] = ["# " + demonym.lower() for demonym in demonym_to_country_code]
 patterns["approximately"] = ["approximately #", "up to #"]
