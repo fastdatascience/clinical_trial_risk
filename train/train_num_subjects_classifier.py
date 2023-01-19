@@ -81,7 +81,8 @@ for file_name, ground_truth in annotations.items():
     raw_texts = file_to_text[file_name]
     tokenised_pages = list(tokenise_pages(raw_texts))
 
-    ground_truth = re.sub(r'\D.+', '', str(ground_truth))
+    if any(i.isdigit() for i in ground_truth):
+        ground_truth = re.sub(r'\D.+', '', str(ground_truth))
     df_instances, _, _ = extract_features(tokenised_pages)
     df_instances["ground_truth"] = (df_instances["candidate"] == ground_truth).apply(int)
     df_instances["file_name"] = file_name
