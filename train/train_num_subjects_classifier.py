@@ -4,7 +4,6 @@ import os
 import pickle as pkl
 import re
 import sys
-import gzip
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,7 +11,6 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.pyplot import figure
 from sklearn.ensemble import RandomForestClassifier
-import json
 
 sys.path.append("../front_end")
 
@@ -57,7 +55,7 @@ num_ctgov_files_loaded = 0
 for annot in annotations:
     if "NCT" in annot:
         if annot not in file_to_pages_ctgov:
-            print ("missing protocol text for " + annot)
+            print("missing protocol text for " + annot)
         else:
             file_to_text[annot] = file_to_pages_ctgov[annot]
             num_ctgov_files_loaded += 1
@@ -105,11 +103,18 @@ for test_file in df.file_name:
     m.fit(df_train[FEATURE_NAMES], df_train["ground_truth"])
 
     df_test = df_instances[df_instances.file_name == test_file]
-    probas = m.predict_proba(df_test[FEATURE_NAMES])
+    if len(df_test) > 0:
+        probas = m.predict_proba(df_test[FEATURE_NAMES])
 
-    winning_index = np.argmax(probas[:, 1])
-    y_pred.append(df_test.candidate.iloc[winning_index])
-    y_pred_proba.append(probas[winning_index])
+        winning_index = np.argmax(probas[:, 1])
+
+        winner = df_test.candidate.iloc[winning_index]
+        p = probas[winning_index]
+    else:
+        winner = 0
+        p = 0
+    y_pred.append(winner)
+    y_pred_proba.append(p)
 
 df["y_pred"] = y_pred
 df["is_correct"] = df["y_pred"] == df["ground_truth"]

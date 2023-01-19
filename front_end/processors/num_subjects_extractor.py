@@ -358,7 +358,7 @@ class NumSubjectsExtractor:
         is_per_arm = []
         for k, v in contexts.items():
             v = v.lower()
-            if "per arm" in v or "in each arm" in v or "per cohort" in v or "in each cohort" in v or "per group" in v or "in each group" in v:
+            if "per arm" in v or "in each arm" in v or "per cohort" in v or "in each cohort" in v or "per group" in v or "in each group" in v or "in each of the cohorts" in v or "in each of the arms" in v:
                 is_per_arm.append(k)
 
         return {"prediction": int(num_subjects), "pages": num_subjects_to_pages, "context": contexts, "score": score,
