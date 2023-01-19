@@ -88,6 +88,8 @@ for file_name, ground_truth in annotations.items():
 
     if df_instances.ground_truth.sum() == 0:
         print("No matches found for", file_name, ground_truth)
+        print ("\tskipping...")
+        continue
 
     all_feature_sets.append(df_instances)
 
