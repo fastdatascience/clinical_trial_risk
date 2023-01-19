@@ -182,7 +182,7 @@ annotations = {'HIV-HIV-2017-Bekker-HVTN100.pdf': '252',
                '91_NCT03569891_Prot_000.pdf': '50', # Fifty patients will be enrolled at an estimated accrual rate of 3 patients per month
                '51_NCT01908751_Prot_SAP_000.pdf': '808',
                '74_NCT02622074_Prot_SAP_000.pdf': '100',
-               '91_NCT03465891_Prot_SAP_000.pdf': '50',
+               '91_NCT03465891_Prot_SAP_000.pdf': 'fifty',
                '25_NCT03251625_Prot_000.pdf': '400',
                '17_NCT03476317_Prot_SAP_001.pdf': '60',
                '30_NCT02002130_Prot_SAP_000.pdf': '110',
@@ -201,7 +201,7 @@ annotations = {'HIV-HIV-2017-Bekker-HVTN100.pdf': '252',
                '38_NCT02814838_Prot_001.pdf': '72',
                '85_NCT02470585_Prot_000.pdf': '1100',
                '98_NCT02443298_Prot_000.pdf': '200',
-               '05_NCT02716805_Prot_SAP_000.pdf': '24', # 6... in each of the cohorts, 4 cohorts
+               '05_NCT02716805_Prot_SAP_000.pdf': '6', # 6... in each of the cohorts, 4 cohorts => 24
                '91_NCT02698891_Prot_SAP_000.pdf': '125',
                '87_NCT03106987_Prot_000.pdf': '228',
                '50_NCT01957150_Prot_000.pdf': '280',
