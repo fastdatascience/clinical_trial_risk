@@ -93,7 +93,7 @@ FEATURE_NAMES.append("magnitude")
 
 matcher = Matcher(nlp.vocab)
 
-num_regex = re.compile(r'^[1-9]\d*,?\d+$')
+num_regex = re.compile(r'(?i)^(?:[1-9]\d*,?\d+|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)$')
 
 ABSOLUTE_MINIMUM = 8
 ABSOLUTE_MAXIMUM = 1000000
