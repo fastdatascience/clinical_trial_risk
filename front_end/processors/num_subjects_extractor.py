@@ -278,7 +278,10 @@ def extract_features(tokenised_pages: list):
             if min_dist == -1 or min_dist > 1000:
                 min_dist = 1000
             features[candidate][distance_feature] = min_dist
-        features[candidate]["magnitude"] = min(int(re.sub(r'\D.+$', '', candidate)), 50)
+        n = num_lookup.get(candidate.lower())
+        if not n:
+            n = int(re.sub(r'\D.+$', '', candidate))
+        features[candidate]["magnitude"] = min(n, 50)
 
     candidates = []
     feature_vectors = []
