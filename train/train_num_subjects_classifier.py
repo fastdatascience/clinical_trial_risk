@@ -56,8 +56,11 @@ with open("../data/ctgov/protocols.pkl.gz", "rb") as f:
 num_ctgov_files_loaded = 0
 for annot in annotations:
     if "NCT" in annot:
-        file_to_text[annot] = file_to_pages_ctgov[annot]
-        num_ctgov_files_loaded += 1
+        if annot not in file_to_pages_ctgov:
+            print ("missing protocol text for " + annot)
+        else:
+            file_to_text[annot] = file_to_pages_ctgov[annot]
+            num_ctgov_files_loaded += 1
 
 del file_to_pages_ctgov
 
