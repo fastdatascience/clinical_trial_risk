@@ -72,7 +72,7 @@ patterns["distance to each no number"] = ["each", "every"]
 patterns["distance to site no number"] = ["site"]
 patterns["distance to arm/group no number"] = ["arm", "group"]
 patterns["distance to future indicator no number"] = ["will"]
-patterns["distance to past indicator no number"] = ["was", "were", "to date", "literature"]
+patterns["distance to past indicator no number"] = ["was", "were", "to date", "literature", "showed"]
 patterns["distance to contents no number"] = ["table of contents", "index"]
 patterns["distance to et al no number"] = ["et al"]
 patterns["distance to conclude no number"] = ["conclude"]
@@ -82,6 +82,7 @@ patterns["distance to target or targets no number"] = ["target", "targets"]
 patterns["distance to page no number"] = ["page"]
 patterns["distance to percent no number"] = ["%"]
 patterns["distance to vaccine no number"] = ["vaccine", "vaccinated"]
+patterns["distance to total no number"] = ["total"]
 
 patterns_without_number = set([x for x in patterns if "no number" in x])
 
@@ -134,7 +135,7 @@ negative_patterns = []
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
     "IN": ["fold", "gy", "cycles", "doses", "mci", "ci", "mg", "kg", "ml", "l", "g", "kg", "mg", "s", "days", "months",
            "years", "hours", "seconds", "minutes", "sec",
-           "min", "mcg", "cc", "ng", "kcal", "cal", "events",
+           "min", "mcg", "cc", "ng", "kcal", "cal", "events","stations",
            "mol", "mmol", "mi", "h", "hr", "hrs", "s", "m", "km", "lb", "oz", "moles", "mole", "wk", "wks", "week",
            "weeks", "µm", "cases", "progression", "death", "adverse", "yrs",
            "cells", "appointments", "µg", "episodes", "incidents", "sites", "locations", "countries", "centres",
@@ -159,7 +160,7 @@ negative_patterns.append([{"LOWER": {
 
 # Exclude dates
 negative_patterns.append([{"LOWER": {
-    "IN": ["january", "jan", "february", "feb", "march", "mar", "april", "apr", "june", "jun", "july", "jul", "august",
+    "IN": ["january", "jan", "february", "feb", "march", "mar", "april", "apr", "may", "june", "jun", "july", "jul", "august",
            "aug", "september", "sep", "sept", "october", "oct", "november", "nov", "december", "dec"]}},
     {"LIKE_NUM": True}])
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
@@ -172,9 +173,13 @@ negative_patterns.append([{"LOWER": {
     "IN": ["than"]}}, {"LIKE_NUM": True}])  # serving more than 1000 patients
 
 negative_patterns.append([{"LOWER": {
-    "IN": ["per", "additional", "remaining"]}}, {"LIKE_NUM": True}])
+    "IN": ["per", "additional", "remaining", "incremental", "covid"]}}, {"LIKE_NUM": True}]) # COVID-19
 
-negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {"IN": ["additional"]}}])
+negative_patterns.append([{"LOWER": {
+    "IN": ["increments"]}},{"LOWER": {
+    "IN": ["of"]}}, {"LIKE_NUM": True}])
+
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {"IN": ["additional", "per"]}}])
 
 # Exclude contents page
 negative_patterns.append([{"LIKE_NUM": True}, {"TEXT": {"REGEX": r"^\d+\.\d+$"}}])
@@ -183,6 +188,11 @@ negative_patterns.append([{"LIKE_NUM": True}, {"TEXT": {"REGEX": r"^\d+\.\d+$"}}
 negative_patterns.append([{"LOWER": "the"}, {"LOWER": "first"}, {"LIKE_NUM": True}])
 
 negative_patterns.append([{"TEXT": "Week"}, {"LIKE_NUM": True}])  # Week 16
+
+negative_patterns.append([{"LOWER": {
+    "IN": ["page"]}}, {"LIKE_NUM": True}, {"LOWER": {
+    "IN": ["of"]}},{"LIKE_NUM": True}]) # page 1 of 10
+
 
 negative_matcher.add("MASK", negative_patterns)
 
