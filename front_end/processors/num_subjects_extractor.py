@@ -32,19 +32,22 @@ patterns["total"] = ["total #", "total of #"]
 patterns["total_after"] = ["# total", "# overall"]
 patterns["n ="] = ['n = #', 'n > #', 'n ≥ #']
 patterns["participants"] = ['# total participants', 'number of participants #', '# participants',
-                            'participants up to #']
+                            'participants up to #', '# consecutive patients', '# consecutive subjects',
+                            '# consecutive participants']
 patterns["subjects"] = ['# total subjects', 'number of subjects #', '# subjects', 'subjects up to #']
 patterns["misc_personal_noun"] = ['# people', '# persons', '# residents', '# mother infant pairs',
                                   '# mother child pairs', '# mother - child pairs',
                                   '# mother - infant pairs', '# individuals', "# sexually active", "# patients",
                                   "# pts", "# cases", "# * cases", '# * patients', '# * pts',
                                   '# outpatients', '# * outpatients', '# * subjects', "# volunteers",
-                                  "# high risk", "# high - risk"]  # "# vaccine recipients", "# recipients"]
+                                  "# high risk", "# high - risk",
+                                  "# neonates"]  # "# vaccine recipients", "# recipients"]
 patterns["gender"] = ['# male', '# males', '# female', '# females', '# women', '# men', '# mothers', '# pregnant']
 patterns["age"] = ['# infants', '# adult', '# adults', '# adolescents', '# babies', '# children']
 patterns["disease_state"] = ['# healthy', '# hiv infected', '# hiv positive', '# hiv negative', '# hiv - infected',
                              '# hiv - positive', '# hiv - negative', '# evaluable',
-                             '# evaluable', '# efficacy-evaluable', '# efficacy - evaluable', '# activated']
+                             '# evaluable', '# efficacy-evaluable', '# efficacy - evaluable', '# activated',
+                             "analyzable #", "analysable #"]
 patterns["selection"] = ['selection #', 'selection of #', ]
 patterns["demonym"] = ["# " + demonym.lower() for demonym in demonym_to_country_code]
 patterns["approximately"] = ["approximately #", "up to #"]
@@ -70,8 +73,14 @@ patterns["distance to site no number"] = ["site"]
 patterns["distance to arm/group no number"] = ["arm", "group"]
 patterns["distance to future indicator no number"] = ["will"]
 patterns["distance to past indicator no number"] = ["was", "were", "to date", "literature"]
-patterns["distance to contents"] = ["table of contents", "index"]
-patterns["distance to et al"] = ["et al"]
+patterns["distance to contents no number"] = ["table of contents", "index"]
+patterns["distance to et al no number"] = ["et al"]
+patterns["distance to conclude no number"] = ["conclude"]
+patterns["distance to plan or plans no number"] = ["plan", "plans", "planned", "planning"]
+patterns["distance to propose or proposes no number"] = ["propose", "proposes", "proposed", "proposing"]
+patterns["distance to target or targets no number"] = ["target", "targets"]
+patterns["distance to page no number"] = ["page"]
+patterns["distance to percent"] = ["%"]
 
 patterns_without_number = set([x for x in patterns if "no number" in x])
 
@@ -104,6 +113,8 @@ for feature_name, feature_patterns in patterns.items():
                     if is_range == 1:
                         pattern.append({"LOWER": {"IN": ["-", "–", "to"]}})
                         pattern.append({"LIKE_NUM": True})
+                elif word == "%":  # percentage
+                    pattern.append({"TEXT": {"REGEX": r"^\d+%$"}})
                 elif word == "*":  # wildcard
                     pattern.append({"LIKE_NUM": False})
                 else:
@@ -117,19 +128,57 @@ for feature_name, feature_patterns in patterns.items():
 negative_matcher = Matcher(nlp.vocab)
 negative_patterns = []
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
-    "IN": ["mg", "kg", "ml", "l", "g", "kg", "mg", "s", "days", "months", "years", "hours", "seconds", "minutes", "sec",
-           "min", "mcg",
+    "IN": ["fold", "gy", "cycles", "doses", "mci", "ci", "mg", "kg", "ml", "l", "g", "kg", "mg", "s", "days", "months",
+           "years", "hours", "seconds", "minutes", "sec",
+           "min", "mcg", "cc", "ng", "kcal", "cal", "events",
            "mol", "mmol", "mi", "h", "hr", "hrs", "s", "m", "km", "lb", "oz", "moles", "mole", "wk", "wks", "week",
-           "weeks",
+           "weeks", "µm", "cases", "progression", "death", "adverse", "yrs",
            "cells", "appointments", "µg", "episodes", "incidents", "sites", "locations", "countries", "centres",
-           "centers",
+           "centers", "liters", "litres", "milliliters", "millilitres", "centiliters", "centilitres",
            "effect", "visits", "revolutions", "cgy", "mm3", "mm", "cm", "cm3", "sec", "pages", "mcg", "µl", "c", "°C",
-           "°", "platelets", "dl", "pg", "mmhg", "hg", "gl", "msec", "ms", "µs"]}}])
+           "°", "platelets", "dl", "pg", "mmhg", "hg", "gl", "msec", "ms", "µs", "cohorts"]}}])
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
+    "IN": ["investigational", "investigative", "experimental", "clinical", "study"]}}, {"LOWER": {
+    "IN": ["sites", "centers", "centres", "locations", "studies", "trials"]}}])
+
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
+    "IN": ["new"]}}, {"LOWER": {
+    "IN": ["cases"]}}])
+
+negative_patterns.append([{"LOWER": {
+    "IN": ["incidence", "prevalence"]}}, {"LOWER": {
+    "IN": ["of"]}}, {"LIKE_NUM": True}])
+
+negative_patterns.append([{"LOWER": {
+    "IN": ["et"]}}, {"LOWER": {
+    "IN": ["al"]}}, {"LIKE_NUM": True}])
+
+# Exclude dates
+negative_patterns.append([{"LOWER": {
+    "IN": ["january", "jan", "february", "feb", "march", "mar", "april", "apr", "june", "jun", "july", "jul", "august",
+           "aug", "september", "sep", "sept", "october", "oct", "november", "nov", "december", "dec"]}},
+    {"LIKE_NUM": True}])
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
+    "IN": ["january", "jan", "february", "feb", "march", "mar", "april", "apr", "june", "jun", "july", "jul", "august",
+           "aug", "september", "sep", "sept", "october", "oct", "november", "nov", "december", "dec"]}}])
+
+negative_patterns.append([{"LOWER": {
+    "IN": ["serving"]}}, {"LOWER": {
+    "IN": ["more"]}}, {"LOWER": {
+    "IN": ["than"]}}, {"LIKE_NUM": True}])  # serving more than 1000 patients
+
+negative_patterns.append([{"LOWER": {
+    "IN": ["per", "additional", "remaining"]}}, {"LIKE_NUM": True}])
+
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {"IN": ["additional"]}}])
+
 # Exclude contents page
 negative_patterns.append([{"LIKE_NUM": True}, {"TEXT": {"REGEX": r"^\d+\.\d+$"}}])
 
 # The first 31 participants
 negative_patterns.append([{"LOWER": "the"}, {"LOWER": "first"}, {"LIKE_NUM": True}])
+
+negative_patterns.append([{"TEXT": "Week"}, {"LIKE_NUM": True}])  # Week 16
 
 negative_matcher.add("MASK", negative_patterns)
 
