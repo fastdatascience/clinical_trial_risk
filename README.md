@@ -128,6 +128,8 @@ This is in *data/ctgov*.
 
 You will need to go to that folder and follow the instructions for downloading the Postgres data dump, and then run the shell scripts and Jupyter notebooks to generate the dataset.
 
+You will need to run the Jupyter notebooks in the `train` folder to train these extra models.
+
 ## Developer's guide: Deploying the tool as a web app to Microsoft Azure App Service
 
 The Azure deployment consists of two separate web apps: a front end, and a Tika web app for PDF parsing.
