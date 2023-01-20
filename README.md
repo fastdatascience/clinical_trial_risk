@@ -6,8 +6,7 @@ Based on the Dash Natural Gas demo: https://github.com/plotly/dash-sample-apps
 
 Runs on Dash interactive Python framework developed by [Plotly](https://plot.ly/). 
 
-Developed by Thomas Wood / Fast Data Science
-thomas@fastdatascience.com
+Developed by Thomas Wood / Fast Data Science, https://fastdatascience.com
 
 This tool is written in Python using the Dash front end library and the Java library Tika for reading PDFs, and runs on Linux, Mac, and Windows, and can be deployed as a web app using Docker.
 
