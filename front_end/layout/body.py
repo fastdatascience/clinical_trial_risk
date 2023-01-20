@@ -31,9 +31,9 @@ file_to_text = {}
 dataset_selector_style = None
 
 try:
-    # with bz2.open("demo_data/demo_protocols.pkl.bz2", "rb") as f:
+    with bz2.open("demo_data/demo_protocols.pkl.bz2", "rb") as f:
     # FOR TRAINING ONLY
-    with bz2.open("../data/ctgov/protocols_small.pkl.bz2", "rb") as f:
+    # with bz2.open("../data/ctgov/protocols_small.pkl.bz2", "rb") as f:
         file_to_text = pkl.load(f)
     with open("../train/num_subjects_classifier_annotations.py", "r") as f:
         for l in f:
