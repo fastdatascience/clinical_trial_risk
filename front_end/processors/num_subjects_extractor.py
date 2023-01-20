@@ -45,9 +45,9 @@ patterns["misc_personal_noun"] = ['# people', '# persons', '# residents', '# mot
 patterns["gender"] = ['# male', '# males', '# female', '# females', '# women', '# men', '# mothers', '# pregnant']
 patterns["age"] = ['# infants', '# adult', '# adults', '# adolescents', '# babies', '# children']
 patterns["disease_state"] = ['# healthy', '# hiv infected', '# hiv positive', '# hiv negative', '# hiv - infected',
-                             '# hiv - positive', '# hiv - negative', '# evaluable',
+                             '# hiv - positive', '# hiv - negative', '# evaluable', "# infected",
                              '# evaluable', '# efficacy-evaluable', '# efficacy - evaluable', '# activated',
-                             "analyzable #", "analysable #", '# overweight', '# obese']
+                             "analyzable #", "analysable #", '# overweight', '# obese',  "# cirrhotic", "# diabetic",]
 patterns["selection"] = ['selection #', 'selection of #', ]
 patterns["demonym"] = ["# " + demonym.lower() for demonym in demonym_to_country_code]
 patterns["approximately"] = ["approximately #", "up to #"]
@@ -83,6 +83,10 @@ patterns["distance to page no number"] = ["page"]
 patterns["distance to percent no number"] = ["%"]
 patterns["distance to vaccine no number"] = ["vaccine", "vaccinated"]
 patterns["distance to total no number"] = ["total"]
+patterns["distance to screen no number"] = ["screen", "screened", "screening"]
+patterns["distance to prevalence no number"] = ["prevalence", "incidence"]
+patterns["distance to this study no number"] = ["this study", "this trial"]
+
 
 patterns_without_number = set([x for x in patterns if "no number" in x])
 
@@ -134,14 +138,16 @@ negative_matcher = Matcher(nlp.vocab)
 negative_patterns = []
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
     "IN": ["fold", "gy", "cycles", "doses", "mci", "ci", "mg", "kg", "ml", "l", "g", "kg", "mg", "s", "days", "months",
-           "years", "hours", "seconds", "minutes", "sec",
-           "min", "mcg", "cc", "ng", "kcal", "cal", "events","stations",
+           "years", "hours", "seconds", "minutes", "sec", "hour", "minute", "year", "month", "day", "second", "week",
+           "min", "mcg", "cc", "ng", "kcal", "cal", "events","stations","channels","dollars", "usd", "gbp", "pounds", "euros",
            "mol", "mmol", "mi", "h", "hr", "hrs", "s", "m", "km", "lb", "oz", "moles", "mole", "wk", "wks", "week",
-           "weeks", "µm", "cases", "progression", "death", "adverse", "yrs",
+           "weeks", "µm", "cases", "progression", "death", "adverse", "yrs","ae", "sae", "aes", "saes","teae", "teaes",
+           "cups","treatments","lesions","injuries","copies",
            "cells", "appointments", "µg", "episodes", "incidents", "sites", "locations", "countries", "centres",
            "centers", "liters", "litres", "milliliters", "millilitres", "centiliters", "centilitres",
-           "effect", "visits", "revolutions", "cgy", "mm3", "mm", "cm", "cm3", "sec", "pages", "mcg", "µl", "c", "°C",
-           "°", "platelets", "dl", "pg", "mmhg", "hg", "gl", "msec", "ms", "µs", "cohorts"]}}])
+           "effect", "visits", "revolutions", "cgy", "mm3", "mm", "cm", "cm3", "sec", "pages", "mcg", "µl", "c", "°C", "°c",
+           "°", "platelets", "dl", "pg", "mmhg", "hg", "gl", "msec", "ms", "µs", "cohorts", "million", "billion", "times", "crcl",
+           "daltons", "gmol", "g/mol", "sieverts", "sv", "msv"]}}])
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
     "IN": ["investigational", "investigative", "experimental", "clinical", "study"]}}, {"LOWER": {
     "IN": ["sites", "centers", "centres", "locations", "studies", "trials"]}}])
@@ -150,8 +156,24 @@ negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
     "IN": ["new"]}}, {"LOWER": {
     "IN": ["cases"]}}])
 
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
+    "IN": [ "plasma"]}}, {"LOWER": {
+    "IN": [ "samples"]}}])
+
+
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
+    "IN": ["consecutive"]}}, {"LOWER": {
+    "IN": ["weeks"]}}])
+
 negative_patterns.append([{"LOWER": {
-    "IN": ["incidence", "prevalence"]}}, {"LOWER": {
+    "IN": ["incidence", "prevalence", "subsample"]}}, {"LOWER": {
+    "IN": ["of"]}}, {"LIKE_NUM": True}])
+
+
+
+negative_patterns.append([{"LOWER": {
+    "IN": ["sub"]}}, {"LOWER": {
+    "IN": ["sample"]}}, {"LOWER": {
     "IN": ["of"]}}, {"LIKE_NUM": True}])
 
 negative_patterns.append([{"LOWER": {
@@ -173,7 +195,7 @@ negative_patterns.append([{"LOWER": {
     "IN": ["than"]}}, {"LIKE_NUM": True}])  # serving more than 1000 patients
 
 negative_patterns.append([{"LOWER": {
-    "IN": ["per", "additional", "remaining", "incremental", "covid"]}}, {"LIKE_NUM": True}]) # COVID-19
+    "IN": ["per", "additional", "remaining", "incremental", "covid", "ages", "aged"]}}, {"LIKE_NUM": True}]) # COVID-19
 
 negative_patterns.append([{"LOWER": {
     "IN": ["increments"]}},{"LOWER": {
@@ -186,6 +208,12 @@ negative_patterns.append([{"LIKE_NUM": True}, {"TEXT": {"REGEX": r"^\d+\.\d+$"}}
 
 # The first 31 participants
 negative_patterns.append([{"LOWER": "the"}, {"LOWER": "first"}, {"LIKE_NUM": True}])
+
+negative_patterns.append([{"LOWER": "weeks"}, {"LIKE_NUM": True}, {"LOWER": {"IN":["to", "and"]}}, {"LIKE_NUM": True}])
+# weeks 1 to 5
+
+negative_patterns.append([{"LOWER": "week"}, {"LIKE_NUM": True}, {"LOWER": "visit"}]) #  week 12 visit
+
 
 negative_patterns.append([{"TEXT": "Week"}, {"LIKE_NUM": True}])  # Week 16
 
@@ -324,6 +352,20 @@ class NumSubjectsExtractor:
     def process(self, tokenised_pages: list) -> tuple:
         """
         Identify the number of subjects in the trial.
+
+        Remaining to do on this component:
+
+        It should be retrained to use Spacy's tokenisation as input.
+        It should allow multiple mentions of sample size in document, such as when a range is given.
+        The training data should distinguish between absolute and per-arm/cohort sample size.
+        If the per-cohort sample size is a simple divisor of the absolute, then this should boost the score.
+        Sometimes there are two cohorts that add up to the total. This is tricky.
+        There are separate numbers:
+        number screened, number randomised, number in cohort/group A, cohort/group B, etc.
+        also sample size in Phase 1, sample size in Phase 2, etc, sample size per site
+        Sample size can be given in words, including multi word expression
+
+        We should also have a metric to exclude page numbers. E.g. 76 of 116 -> if this pattern occurs on many pages, it should be excluded.
 
         :param tokenised_pages: List of lists of tokens of each page.
         :return: The prediction (int) and a map from numbers to the pages it's mentioned in.
