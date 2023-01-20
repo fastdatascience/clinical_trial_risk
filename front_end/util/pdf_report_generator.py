@@ -133,7 +133,7 @@ def generate_pdf(export_pdf_button_clicks, data, columns, tertiles_data, tertile
                     a("""body {
   background-color: #ffffff;
   margin: 5%;
-  font-family: "PT Sans";
+  font-family: "Roboto";
   /* "Noto Serif",serif */
 }
 h1, h2, h3, h4 {
@@ -152,14 +152,14 @@ div {
 
             with a.body():
                 with a.span(style="font-size:10pt;position:absolute; top:0px; left:0px;"):
-                    with a.a(href="https://protocols.fastdatascience.com", target="new"):
+                    with a.a(href="https://app.clinicaltrialrisk.org/", target="new"):
                         with a.span(style="color:black;"):
-                            a("protocols.fastdatascience.com")
-                # with a.span(style="font-size:10pt;position:absolute; top:0px; right:0px;"):
-                #     with a.a(href="https://fastdatascience.com", target="new"):
-                #         a.img(
-                #             src="https://raw.githubusercontent.com/fastdatascience/logos/master/logo_transparent_background.png",
-                #             width="150px")
+                            a("clinicaltrialrisk.org")
+                with a.span(style="font-size:10pt;position:absolute; top:0px; right:0px;"):
+                    with a.a(href="https://app.clinicaltrialrisk.org/", target="new"):
+                        a.img(
+                            src="https://clinicaltrialrisk.org/wp-content/uploads/2022/12/clinical-trial-risk-tool-high-resolution-logo-color-on-transparent-background-e1671130033240.png",
+                            width="150px")
                 a.br()
                 with a.h1():
                     a(doc_title)

@@ -138,6 +138,7 @@ rows = [
     dcc.Store(id="stage_8_complete"),
     dcc.Store(id="num_subjects_and_tertile"),
     dcc.Store(id="dummy"),
+    dcc.Store(id="dummy2"),
     dcc.Download("download_excel"),
     dcc.Download("download_pdf"),
     html.Div(id="output-clientside"),
@@ -189,7 +190,12 @@ rows = [
                     html.Br(),
                     "Single-document protocols only.",
                     html.Br(),
-                    "Protocols with SAP as a separate PDF are not supported."
+                    "Protocols with SAP as a separate PDF are not supported.",
+                    html.Br(),
+                    "The tool does not store your data.",
+                    html.Br(),
+                    html.A("FAQ", href="https://clinicaltrialrisk.org/faq/"), " • ",
+                    html.A("Privacy policy", href="https://clinicaltrialrisk.org/privacy-policy/")
                 ],
                 className="one-third column",
                 id="button",
@@ -538,7 +544,9 @@ rows.append(
 
                     ),
 
-                    html.Button("Save annotation", id="save_annotation", style={"display":"false"}),
+                    html.Button("Save annotation", id="save_annotation", style={"visibility":"hidden"}),
+
+                    html.Button("Send feedback to developers", id="send_feedback"),
 
                 ],
                 className="pretty_container three columns",

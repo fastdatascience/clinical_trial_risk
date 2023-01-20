@@ -1,4 +1,4 @@
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 
 JAVASCRIPT_FUNCTION_TO_CALCULATE_SAMPLE_SIZE_TERTILE = """function(num_subjects, condition, phase, data, columns) {
             if (num_subjects == null || (condition != "HIV" && condition != "TB") || phase === 0 || phase == null) {
@@ -106,3 +106,75 @@ def add_clientside_callbacks(dash_app):
         [Output("progress_bar", "value")],
         [Input("interval", "n_intervals")]
     )
+
+
+
+
+    # When the user clicks "Send feedback" we auto-populate a Google form.
+    dash_app.clientside_callback(
+        """function(send_feedback, file_name,    condition, condition_to_pages,
+                 phase, phase_to_pages,
+                 sap, sap_to_pages,
+                 effect_estimate,
+                 effect_estimate_to_pages,
+                 num_subjects,
+                 num_subjects_to_pages,
+                 num_arms,
+                 num_arms_to_pages,
+                 countries,
+                 country_to_pages,
+                 simulation,
+                 simulation_to_pages) {
+            if (send_feedback > 0) {
+                try {
+                    if (condition_to_pages["prediction"].toString() !== condition.toString()) {
+                        condition = condition_to_pages["prediction"] + " -> " + condition;
+                    }
+                    if (phase_to_pages["prediction"].toString() !== phase.toString()) {
+                        phase = phase_to_pages["prediction"] + " -> " + phase;
+                    }
+                    if (sap_to_pages["prediction"].toString() !== sap.toString()) {
+                        sap = sap_to_pages["prediction"] + " -> " + sap;
+                    }
+                    if (effect_estimate_to_pages["prediction"].toString() !== condition.toString()) {
+                        effect_estimate = effect_estimate_to_pages["prediction"] + " -> " + effect_estimate;
+                    }
+                    if (num_subjects_to_pages["prediction"].toString() !== num_subjects.toString()) {
+                        num_subjects = num_subjects_to_pages["prediction"] + " -> " + num_subjects;
+                    }
+                    if (num_arms_to_pages["prediction"].toString() !== num_arms.toString()) {
+                        num_arms = num_arms_to_pages["prediction"] + " -> " + num_arms;
+                    }
+                    if (country_to_pages["prediction"].toString() !== countries.toString()) {
+                        countries = country_to_pages["prediction"] + " -> " + countries;
+                    }
+                    if (simulation_to_pages["prediction"].toString() !== condition.toString()) {
+                        simulation = simulation_to_pages["prediction"] + " -> " + simulation;
+                    }
+                } catch (err) {
+                    console.log(err);
+                }
+                window.open("https://docs.google.com/forms/d/e/1FAIpQLSclA0WkZOlG6oy4xBzwUgJVoOoCwiXxUEdYK5ntKFdkhNCx1w/viewform?usp=pp_url&entry.44156177=" +encodeURIComponent(file_name) + "&entry.1222736710=" +encodeURIComponent(condition) + "&entry.1475388048=" +encodeURIComponent(phase) + "&entry.995144902=" +encodeURIComponent(sap) + "&entry.2035138595=" +encodeURIComponent(effect_estimate) + "&entry.1962015267=" +encodeURIComponent(num_subjects) + "&entry.2032818806=" +encodeURIComponent(num_arms) + "&entry.1125470565=" +encodeURIComponent(countries) + "&entry.934539296=" +encodeURIComponent(simulation));
+            }
+
+            return False;
+        }""",
+        [Output("dummy2", "value")],
+        [Input("send_feedback", "n_clicks"),  State("file_name", "data"), State("condition", "value"),
+        State("condition_to_pages", "data"),
+        State("phase", "value"),
+        State("phase_to_pages", "data"),
+        State("sap", "value"),
+        State("sap_to_pages", "data"),
+        State("effect_estimate", "value"),
+        State("effect_estimate_to_pages", "data"),
+        State("num_subjects", "value"),
+        State("num_subjects_to_pages", "data"),
+        State("num_arms", "value"),
+        State("num_arms_to_pages", "data"),
+        State("countries", "value"),
+        State("country_to_pages", "data"),
+        State("simulation", "value"),
+        State("simulation_to_pages", "data"),
+         ],
+            prevent_initial_call=False)

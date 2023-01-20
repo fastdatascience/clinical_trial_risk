@@ -360,7 +360,7 @@ def fill_table(
         State("effect_estimate_to_pages", "data"),
         State("num_subjects", "value"),
         State("num_subjects_to_pages", "data"),
-        State("num_subjects", "value"),
+        State("num_arms", "value"),
         State("num_arms_to_pages", "data"),
         State("countries", "value"),
         State("country_to_pages", "data"),
