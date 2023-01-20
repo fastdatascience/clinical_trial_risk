@@ -538,7 +538,7 @@ rows.append(
 
                     ),
 
-                    html.Button("Save annotation", id="save_annotation"),
+                    html.Button("Save annotation", id="save_annotation", style={"display":"false"}),
 
                 ],
                 className="pretty_container three columns",
