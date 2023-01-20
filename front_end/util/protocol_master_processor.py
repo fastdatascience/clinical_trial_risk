@@ -228,7 +228,7 @@ class MasterProcessor:
         if "num_subjects" in disable:
             num_subjects_to_pages = {"prediction": 0}
         else:
-            report_progress("Running Naive Bayes classifier for number of subjects...")
+            report_progress("Running Random Forest classifier for number of subjects...")
             # num_subjects_to_pages_nb = self.num_subjects_extractor_nb.process(tokenised_pages)
 
             report_progress("Searching for a number of subjects...")

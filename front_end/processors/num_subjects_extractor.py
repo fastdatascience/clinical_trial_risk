@@ -32,19 +32,22 @@ patterns["total"] = ["total #", "total of #"]
 patterns["total_after"] = ["# total", "# overall"]
 patterns["n ="] = ['n = #', 'n > #', 'n ≥ #']
 patterns["participants"] = ['# total participants', 'number of participants #', '# participants',
-                            'participants up to #']
+                            'participants up to #', '# consecutive patients', '# consecutive subjects',
+                            '# consecutive participants']
 patterns["subjects"] = ['# total subjects', 'number of subjects #', '# subjects', 'subjects up to #']
 patterns["misc_personal_noun"] = ['# people', '# persons', '# residents', '# mother infant pairs',
                                   '# mother child pairs', '# mother - child pairs',
                                   '# mother - infant pairs', '# individuals', "# sexually active", "# patients",
                                   "# pts", "# cases", "# * cases", '# * patients', '# * pts',
                                   '# outpatients', '# * outpatients', '# * subjects', "# volunteers",
-                                  "# high risk", "# high - risk"]  # "# vaccine recipients", "# recipients"]
+                                  "# high risk", "# high - risk",
+                                  "# neonates", "# vaccine recipients", "# recipients"]
 patterns["gender"] = ['# male', '# males', '# female', '# females', '# women', '# men', '# mothers', '# pregnant']
 patterns["age"] = ['# infants', '# adult', '# adults', '# adolescents', '# babies', '# children']
 patterns["disease_state"] = ['# healthy', '# hiv infected', '# hiv positive', '# hiv negative', '# hiv - infected',
-                             '# hiv - positive', '# hiv - negative', '# evaluable',
-                             '# evaluable', '# efficacy-evaluable', '# efficacy - evaluable', '# activated']
+                             '# hiv - positive', '# hiv - negative', '# evaluable', "# infected",
+                             '# evaluable', '# efficacy-evaluable', '# efficacy - evaluable', '# activated',
+                             "analyzable #", "analysable #", '# overweight', '# obese',  "# cirrhotic", "# diabetic",]
 patterns["selection"] = ['selection #', 'selection of #', ]
 patterns["demonym"] = ["# " + demonym.lower() for demonym in demonym_to_country_code]
 patterns["approximately"] = ["approximately #", "up to #"]
@@ -69,9 +72,21 @@ patterns["distance to each no number"] = ["each", "every"]
 patterns["distance to site no number"] = ["site"]
 patterns["distance to arm/group no number"] = ["arm", "group"]
 patterns["distance to future indicator no number"] = ["will"]
-patterns["distance to past indicator no number"] = ["was", "were", "to date", "literature"]
-patterns["distance to contents"] = ["table of contents", "index"]
-patterns["distance to et al"] = ["et al"]
+patterns["distance to past indicator no number"] = ["was", "were", "to date", "literature", "showed"]
+patterns["distance to contents no number"] = ["table of contents", "index"]
+patterns["distance to et al no number"] = ["et al"]
+patterns["distance to conclude no number"] = ["conclude"]
+patterns["distance to plan or plans no number"] = ["plan", "plans", "planned", "planning"]
+patterns["distance to propose or proposes no number"] = ["propose", "proposes", "proposed", "proposing"]
+patterns["distance to target or targets no number"] = ["target", "targets"]
+patterns["distance to page no number"] = ["page"]
+patterns["distance to percent no number"] = ["%"]
+patterns["distance to vaccine no number"] = ["vaccine", "vaccinated"]
+patterns["distance to total no number"] = ["total"]
+patterns["distance to screen no number"] = ["screen", "screened", "screening"]
+patterns["distance to prevalence no number"] = ["prevalence", "incidence"]
+patterns["distance to this study no number"] = ["this study", "this trial"]
+
 
 patterns_without_number = set([x for x in patterns if "no number" in x])
 
@@ -83,7 +98,10 @@ FEATURE_NAMES.append("magnitude")
 
 matcher = Matcher(nlp.vocab)
 
-num_regex = re.compile(r'^[1-9]\d*,?\d+$')
+num_regex = re.compile(r'(?i)^(?:[1-9]\d*,?\d+|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)$')
+
+num_lookup = {"twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80,
+              "ninety": 90}
 
 ABSOLUTE_MINIMUM = 8
 ABSOLUTE_MAXIMUM = 1000000
@@ -104,6 +122,8 @@ for feature_name, feature_patterns in patterns.items():
                     if is_range == 1:
                         pattern.append({"LOWER": {"IN": ["-", "–", "to"]}})
                         pattern.append({"LIKE_NUM": True})
+                elif word == "%":  # percentage
+                    pattern.append({"TEXT": {"REGEX": r"^\d+%$"}})
                 elif word == "*":  # wildcard
                     pattern.append({"LIKE_NUM": False})
                 else:
@@ -117,19 +137,90 @@ for feature_name, feature_patterns in patterns.items():
 negative_matcher = Matcher(nlp.vocab)
 negative_patterns = []
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
-    "IN": ["mg", "kg", "ml", "l", "g", "kg", "mg", "s", "days", "months", "years", "hours", "seconds", "minutes", "sec",
-           "min", "mcg",
+    "IN": ["fold", "gy", "cycles", "doses", "mci", "ci", "mg", "kg", "ml", "l", "g", "kg", "mg", "s", "days", "months",
+           "years", "hours", "seconds", "minutes", "sec", "hour", "minute", "year", "month", "day", "second", "week",
+           "min", "mcg", "cc", "ng", "kcal", "cal", "events","stations","channels","dollars", "usd", "gbp", "pounds", "euros",
            "mol", "mmol", "mi", "h", "hr", "hrs", "s", "m", "km", "lb", "oz", "moles", "mole", "wk", "wks", "week",
-           "weeks",
+           "weeks", "µm", "cases", "progression", "death", "adverse", "yrs","ae", "sae", "aes", "saes","teae", "teaes",
+           "cups","treatments","lesions","injuries","copies",
            "cells", "appointments", "µg", "episodes", "incidents", "sites", "locations", "countries", "centres",
-           "centers",
-           "effect", "visits", "revolutions", "cgy", "mm3", "mm", "cm", "cm3", "sec", "pages", "mcg", "µl", "c", "°C",
-           "°", "platelets", "dl", "pg", "mmhg", "hg", "gl", "msec", "ms", "µs"]}}])
+           "centers", "liters", "litres", "milliliters", "millilitres", "centiliters", "centilitres",
+           "effect", "visits", "revolutions", "cgy", "mm3", "mm", "cm", "cm3", "sec", "pages", "mcg", "µl", "c", "°C", "°c",
+           "°", "platelets", "dl", "pg", "mmhg", "hg", "gl", "msec", "ms", "µs", "cohorts", "million", "billion", "times", "crcl",
+           "daltons", "gmol", "g/mol", "sieverts", "sv", "msv"]}}])
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
+    "IN": ["investigational", "investigative", "experimental", "clinical", "study"]}}, {"LOWER": {
+    "IN": ["sites", "centers", "centres", "locations", "studies", "trials"]}}])
+
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
+    "IN": ["new"]}}, {"LOWER": {
+    "IN": ["cases"]}}])
+
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
+    "IN": [ "plasma"]}}, {"LOWER": {
+    "IN": [ "samples"]}}])
+
+
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
+    "IN": ["consecutive"]}}, {"LOWER": {
+    "IN": ["weeks"]}}])
+
+negative_patterns.append([{"LOWER": {
+    "IN": ["incidence", "prevalence", "subsample"]}}, {"LOWER": {
+    "IN": ["of"]}}, {"LIKE_NUM": True}])
+
+
+
+negative_patterns.append([{"LOWER": {
+    "IN": ["sub"]}}, {"LOWER": {
+    "IN": ["sample"]}}, {"LOWER": {
+    "IN": ["of"]}}, {"LIKE_NUM": True}])
+
+negative_patterns.append([{"LOWER": {
+    "IN": ["et"]}}, {"LOWER": {
+    "IN": ["al"]}}, {"LIKE_NUM": True}])
+
+# Exclude dates
+negative_patterns.append([{"LOWER": {
+    "IN": ["january", "jan", "february", "feb", "march", "mar", "april", "apr", "may", "june", "jun", "july", "jul", "august",
+           "aug", "september", "sep", "sept", "october", "oct", "november", "nov", "december", "dec"]}},
+    {"LIKE_NUM": True}])
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
+    "IN": ["january", "jan", "february", "feb", "march", "mar", "april", "apr", "june", "jun", "july", "jul", "august",
+           "aug", "september", "sep", "sept", "october", "oct", "november", "nov", "december", "dec"]}}])
+
+negative_patterns.append([{"LOWER": {
+    "IN": ["serving"]}}, {"LOWER": {
+    "IN": ["more"]}}, {"LOWER": {
+    "IN": ["than"]}}, {"LIKE_NUM": True}])  # serving more than 1000 patients
+
+negative_patterns.append([{"LOWER": {
+    "IN": ["per", "additional", "remaining", "incremental", "covid", "ages", "aged"]}}, {"LIKE_NUM": True}]) # COVID-19
+
+negative_patterns.append([{"LOWER": {
+    "IN": ["increments"]}},{"LOWER": {
+    "IN": ["of"]}}, {"LIKE_NUM": True}])
+
+negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {"IN": ["additional", "per"]}}])
+
 # Exclude contents page
 negative_patterns.append([{"LIKE_NUM": True}, {"TEXT": {"REGEX": r"^\d+\.\d+$"}}])
 
 # The first 31 participants
 negative_patterns.append([{"LOWER": "the"}, {"LOWER": "first"}, {"LIKE_NUM": True}])
+
+negative_patterns.append([{"LOWER": "weeks"}, {"LIKE_NUM": True}, {"LOWER": {"IN":["to", "and"]}}, {"LIKE_NUM": True}])
+# weeks 1 to 5
+
+negative_patterns.append([{"LOWER": "week"}, {"LIKE_NUM": True}, {"LOWER": "visit"}]) #  week 12 visit
+
+
+negative_patterns.append([{"TEXT": "Week"}, {"LIKE_NUM": True}])  # Week 16
+
+negative_patterns.append([{"LOWER": {
+    "IN": ["page"]}}, {"LIKE_NUM": True}, {"LOWER": {
+    "IN": ["of"]}},{"LIKE_NUM": True}]) # page 1 of 10
+
 
 negative_matcher.add("MASK", negative_patterns)
 
@@ -182,7 +273,9 @@ def extract_features(tokenised_pages: list):
             if num_regex.match(token):
                 value = re.sub(r',', '', token)
 
-                parsed = int(value)
+                parsed = num_lookup.get(value.lower())
+                if not parsed:
+                    parsed = int(value)
                 if parsed < ABSOLUTE_MINIMUM or parsed > ABSOLUTE_MAXIMUM:
                     value = None
                     continue
@@ -223,7 +316,10 @@ def extract_features(tokenised_pages: list):
             if min_dist == -1 or min_dist > 1000:
                 min_dist = 1000
             features[candidate][distance_feature] = min_dist
-        features[candidate]["magnitude"] = min(int(re.sub(r'\D.+$', '', candidate)), 50)
+        n = num_lookup.get(candidate.lower())
+        if not n:
+            n = int(re.sub(r'\D.+$', '', candidate))
+        features[candidate]["magnitude"] = min(n, 50)
 
     candidates = []
     feature_vectors = []
@@ -256,6 +352,20 @@ class NumSubjectsExtractor:
     def process(self, tokenised_pages: list) -> tuple:
         """
         Identify the number of subjects in the trial.
+
+        Remaining to do on this component:
+
+        It should be retrained to use Spacy's tokenisation as input.
+        It should allow multiple mentions of sample size in document, such as when a range is given.
+        The training data should distinguish between absolute and per-arm/cohort sample size.
+        If the per-cohort sample size is a simple divisor of the absolute, then this should boost the score.
+        Sometimes there are two cohorts that add up to the total. This is tricky.
+        There are separate numbers:
+        number screened, number randomised, number in cohort/group A, cohort/group B, etc.
+        also sample size in Phase 1, sample size in Phase 2, etc, sample size per site
+        Sample size can be given in words, including multi word expression
+
+        We should also have a metric to exclude page numbers. E.g. 76 of 116 -> if this pattern occurs on many pages, it should be excluded.
 
         :param tokenised_pages: List of lists of tokens of each page.
         :return: The prediction (int) and a map from numbers to the pages it's mentioned in.
@@ -300,7 +410,7 @@ class NumSubjectsExtractor:
         is_per_arm = []
         for k, v in contexts.items():
             v = v.lower()
-            if "per arm" in v or "in each arm" in v or "per cohort" in v or "in each cohort" in v or "per group" in v or "in each group" in v:
+            if "per arm" in v or "in each arm" in v or "per cohort" in v or "in each cohort" in v or "per group" in v or "in each group" in v or "in each of the cohorts" in v or "in each of the arms" in v:
                 is_per_arm.append(k)
 
         return {"prediction": int(num_subjects), "pages": num_subjects_to_pages, "context": contexts, "score": score,
