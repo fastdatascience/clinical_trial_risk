@@ -10,6 +10,8 @@ Developed by Thomas Wood / Fast Data Science, https://fastdatascience.com
 
 This tool is written in Python using the Dash front end library and the Java library Tika for reading PDFs, and runs on Linux, Mac, and Windows, and can be deployed as a web app using Docker.
 
+You can read a walkthrough of how the tool works [here](https://clinicaltrialrisk.org/how-the-clinical-trial-risk-tool-works/) and of how accurate it is [here](https://clinicaltrialrisk.org/accurate-clinical-trial-risk-tool/).
+
 ## Very quick guide to running the tool on your computer
 
 1. Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
