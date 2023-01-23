@@ -47,7 +47,7 @@ patterns["age"] = ['# infants', '# adult', '# adults', '# adolescents', '# babie
 patterns["disease_state"] = ['# healthy', '# hiv infected', '# hiv positive', '# hiv negative', '# hiv - infected',
                              '# hiv - positive', '# hiv - negative', '# evaluable', "# infected",
                              '# evaluable', '# efficacy-evaluable', '# efficacy - evaluable', '# activated',
-                             "analyzable #", "analysable #", '# overweight', '# obese',  "# cirrhotic", "# diabetic",]
+                             "analyzable #", "analysable #", '# overweight', '# obese', "# cirrhotic", "# diabetic", ]
 patterns["selection"] = ['selection #', 'selection of #', ]
 patterns["demonym"] = ["# " + demonym.lower() for demonym in demonym_to_country_code]
 patterns["approximately"] = ["approximately #", "up to #"]
@@ -86,7 +86,6 @@ patterns["distance to total no number"] = ["total"]
 patterns["distance to screen no number"] = ["screen", "screened", "screening"]
 patterns["distance to prevalence no number"] = ["prevalence", "incidence"]
 patterns["distance to this study no number"] = ["this study", "this trial"]
-
 
 patterns_without_number = set([x for x in patterns if "no number" in x])
 
@@ -139,14 +138,18 @@ negative_patterns = []
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
     "IN": ["fold", "gy", "cycles", "doses", "mci", "ci", "mg", "kg", "ml", "l", "g", "kg", "mg", "s", "days", "months",
            "years", "hours", "seconds", "minutes", "sec", "hour", "minute", "year", "month", "day", "second", "week",
-           "min", "mcg", "cc", "ng", "kcal", "cal", "events","stations","channels","dollars", "usd", "gbp", "pounds", "euros",
+           "min", "mcg", "cc", "ng", "kcal", "cal", "events", "stations", "channels", "dollars", "usd", "gbp", "pounds",
+           "euros",
            "mol", "mmol", "mi", "h", "hr", "hrs", "s", "m", "km", "lb", "oz", "moles", "mole", "wk", "wks", "week",
-           "weeks", "µm", "cases", "progression", "death", "adverse", "yrs","ae", "sae", "aes", "saes","teae", "teaes",
-           "cups","treatments","lesions","injuries","copies",
+           "weeks", "µm", "cases", "progression", "death", "adverse", "yrs", "ae", "sae", "aes", "saes", "teae",
+           "teaes",
+           "cups", "treatments", "lesions", "injuries", "copies",
            "cells", "appointments", "µg", "episodes", "incidents", "sites", "locations", "countries", "centres",
            "centers", "liters", "litres", "milliliters", "millilitres", "centiliters", "centilitres",
-           "effect", "visits", "revolutions", "cgy", "mm3", "mm", "cm", "cm3", "sec", "pages", "mcg", "µl", "c", "°C", "°c",
-           "°", "platelets", "dl", "pg", "mmhg", "hg", "gl", "msec", "ms", "µs", "cohorts", "million", "billion", "times", "crcl",
+           "effect", "visits", "revolutions", "cgy", "mm3", "mm", "cm", "cm3", "sec", "pages", "mcg", "µl", "c", "°C",
+           "°c",
+           "°", "platelets", "dl", "pg", "mmhg", "hg", "gl", "msec", "ms", "µs", "cohorts", "million", "billion",
+           "times", "crcl",
            "daltons", "gmol", "g/mol", "sieverts", "sv", "msv"]}}])
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
     "IN": ["investigational", "investigative", "experimental", "clinical", "study"]}}, {"LOWER": {
@@ -157,9 +160,8 @@ negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
     "IN": ["cases"]}}])
 
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
-    "IN": [ "plasma"]}}, {"LOWER": {
-    "IN": [ "samples"]}}])
-
+    "IN": ["plasma"]}}, {"LOWER": {
+    "IN": ["samples"]}}])
 
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
     "IN": ["consecutive"]}}, {"LOWER": {
@@ -168,8 +170,6 @@ negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
 negative_patterns.append([{"LOWER": {
     "IN": ["incidence", "prevalence", "subsample"]}}, {"LOWER": {
     "IN": ["of"]}}, {"LIKE_NUM": True}])
-
-
 
 negative_patterns.append([{"LOWER": {
     "IN": ["sub"]}}, {"LOWER": {
@@ -182,7 +182,8 @@ negative_patterns.append([{"LOWER": {
 
 # Exclude dates
 negative_patterns.append([{"LOWER": {
-    "IN": ["january", "jan", "february", "feb", "march", "mar", "april", "apr", "may", "june", "jun", "july", "jul", "august",
+    "IN": ["january", "jan", "february", "feb", "march", "mar", "april", "apr", "may", "june", "jun", "july", "jul",
+           "august",
            "aug", "september", "sep", "sept", "october", "oct", "november", "nov", "december", "dec"]}},
     {"LIKE_NUM": True}])
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {
@@ -195,10 +196,10 @@ negative_patterns.append([{"LOWER": {
     "IN": ["than"]}}, {"LIKE_NUM": True}])  # serving more than 1000 patients
 
 negative_patterns.append([{"LOWER": {
-    "IN": ["per", "additional", "remaining", "incremental", "covid", "ages", "aged"]}}, {"LIKE_NUM": True}]) # COVID-19
+    "IN": ["per", "additional", "remaining", "incremental", "covid", "ages", "aged"]}}, {"LIKE_NUM": True}])  # COVID-19
 
 negative_patterns.append([{"LOWER": {
-    "IN": ["increments"]}},{"LOWER": {
+    "IN": ["increments"]}}, {"LOWER": {
     "IN": ["of"]}}, {"LIKE_NUM": True}])
 
 negative_patterns.append([{"LIKE_NUM": True}, {"LOWER": {"IN": ["additional", "per"]}}])
@@ -209,18 +210,16 @@ negative_patterns.append([{"LIKE_NUM": True}, {"TEXT": {"REGEX": r"^\d+\.\d+$"}}
 # The first 31 participants
 negative_patterns.append([{"LOWER": "the"}, {"LOWER": "first"}, {"LIKE_NUM": True}])
 
-negative_patterns.append([{"LOWER": "weeks"}, {"LIKE_NUM": True}, {"LOWER": {"IN":["to", "and"]}}, {"LIKE_NUM": True}])
+negative_patterns.append([{"LOWER": "weeks"}, {"LIKE_NUM": True}, {"LOWER": {"IN": ["to", "and"]}}, {"LIKE_NUM": True}])
 # weeks 1 to 5
 
-negative_patterns.append([{"LOWER": "week"}, {"LIKE_NUM": True}, {"LOWER": "visit"}]) #  week 12 visit
-
+negative_patterns.append([{"LOWER": "week"}, {"LIKE_NUM": True}, {"LOWER": "visit"}])  # week 12 visit
 
 negative_patterns.append([{"TEXT": "Week"}, {"LIKE_NUM": True}])  # Week 16
 
 negative_patterns.append([{"LOWER": {
     "IN": ["page"]}}, {"LIKE_NUM": True}, {"LOWER": {
-    "IN": ["of"]}},{"LIKE_NUM": True}]) # page 1 of 10
-
+    "IN": ["of"]}}, {"LIKE_NUM": True}])  # page 1 of 10
 
 negative_matcher.add("MASK", negative_patterns)
 
@@ -413,6 +412,10 @@ class NumSubjectsExtractor:
             if "per arm" in v or "in each arm" in v or "per cohort" in v or "in each cohort" in v or "per group" in v or "in each group" in v or "in each of the cohorts" in v or "in each of the arms" in v:
                 is_per_arm.append(k)
 
-        return {"prediction": int(num_subjects), "pages": num_subjects_to_pages, "context": contexts, "score": score,
+        int_prediction = num_lookup.get(num_subjects, None)
+        if not int_prediction:
+            int_prediction = int(num_subjects)
+
+        return {"prediction": int_prediction, "pages": num_subjects_to_pages, "context": contexts, "score": score,
                 "comment": possible_candidates, "is_per_arm": is_per_arm, "proba": value_to_score,
                 "is_low_confidence": is_low_confidence}
