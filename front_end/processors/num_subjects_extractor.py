@@ -412,7 +412,7 @@ class NumSubjectsExtractor:
             if "per arm" in v or "in each arm" in v or "per cohort" in v or "in each cohort" in v or "per group" in v or "in each group" in v or "in each of the cohorts" in v or "in each of the arms" in v:
                 is_per_arm.append(k)
 
-        int_prediction = num_lookup.get(num_subjects, None)
+        int_prediction = num_lookup.get(num_subjects.lower(), None)
         if not int_prediction:
             int_prediction = int(num_subjects)
 
