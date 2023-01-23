@@ -2,6 +2,8 @@
 
 Live demo available at: https://app.clinicaltrialrisk.org/
 
+Project website at: https://clinicaltrialrisk.org/
+
 Based on the Dash Natural Gas demo: https://github.com/plotly/dash-sample-apps
 
 Runs on Dash interactive Python framework developed by [Plotly](https://plot.ly/). 
