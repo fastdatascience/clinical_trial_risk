@@ -377,6 +377,7 @@ def fill_table(
 def export_pdf(*args):
     return generate_pdf(*args)
 
+
 # def save_configuration:
 
 
@@ -430,34 +431,33 @@ def generate_json(n_nlicks, wt_data, wt_columns, tt_data, tt_columns):
         return [None]
     cdf = to_df(wt_columns, wt_data)
     tdf = to_df(tt_columns, tt_data)
-    res = {}
-    res['configuration_data'] = cdf
-    res['tertile_data'] = tdf
-
+    res = {'configuration_data': cdf, 'tertile_data': tdf}
     excel_file_name = "res.json"
 
     return [dcc.send_data_frame(pd.DataFrame.from_dict(res).to_json, excel_file_name)]
 
+
 @dash_app.callback(
-    Output("output-config-data-upload", "data"),
+    Output("tertiles_table", "data"),
+    Output("configuration_table", "data"),
     Input('upload-config-data', 'contents'),
     State('upload-config-data', 'filename'),
-    State('upload-config-data', 'last_modified'),
-    State("tertiles_table", "data"),
+    State('upload-config-data', 'last_modified')
 )
-def upload_config( contents, file_name, file_date, tt_data):
+def upload_config(contents, file_name, file_date):
     content_type, content_string = contents.split(',')
 
     decoded = base64.b64decode(content_string)
     x = json.loads(decoded.decode('utf-8'))
     td = x["tertile_data"]
-    tt_list = []
+    cd = x["configuration_data"]
 
+    tdd = transform_data(td)
+    cdd = transform_data(cd)
+    print(tdd)
+    print(cdd)
+    return [tdd, cdd]
 
-    print(td)
-    print(type(tt_data))
-    print(tt_data)
-    tt_data = []
 
 @dash_app.callback(
     [
@@ -548,15 +548,31 @@ def update_wordcloud(tokenised_pages, condition_to_pages):
 def to_df(columns, data):
     x = {}
     for col in columns:
-        col_name = col['name']
-        column_data = []
-        for r in data:
-            cell_data = r[col['id']]
-            column_data.append(cell_data)
+        column_data = [r[col['id']] for r in data]
         if column_data is not None:
+            col_name = col['name']
             x[col_name] = column_data
 
     return x
+
+
+def transform_data(x):
+    l = []
+    for a in x:
+        if x[a] is not None:
+            arr = x[a]
+
+            for b in arr:
+                if l:
+                    for sl in l:
+                        if a not in sl:
+                            sl[a] = b
+                            break
+                else:
+                    y = {a: b}
+                    l.append(y)
+    return l
+
 
 # Make sure the Javascript callbacks are added too.
 add_clientside_callbacks(dash_app)
