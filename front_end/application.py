@@ -4,6 +4,7 @@ import re
 import time
 import traceback
 
+import flask
 import dash
 # import dash_auth
 import dash_html_components as html
@@ -24,6 +25,8 @@ from util.protocol_master_processor import MasterProcessor
 from util.risk_assessor import calculate_risk_level
 from util.score_to_risk_level_converter import get_risk_level_and_traffic_light
 from util.word_cloud_generator import WordCloudGenerator
+
+from dash_auth0_oauth.Auth0_auth import Auth0Auth
 
 COMMIT_ID = os.environ.get('COMMIT_ID', "not found")
 
@@ -60,6 +63,14 @@ dash_app = dash.Dash(
 #     dash_app,
 #     VALID_USERNAME_PASSWORD_PAIRS
 # )
+
+auth0_auth_url = os.environ.get('AUTH0_AUTH_URL', None)
+# auth_user = flask.request.cookies.get('AUTH-USER')
+# print("auth0_auth_url " + auth0_auth_url)
+# print("auth_user " + auth_user)
+
+if(auth0_auth_url != None):
+    auth = Auth0Auth(dash_app)
 
 dash_app.title = "Clinical Trial Risk Tool"
 server = dash_app.server  # For Google Cloud Platform
