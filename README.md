@@ -95,6 +95,12 @@ python preprocess.py
 
 This will populate the `data/preprocessed_text` and `data/preprocessed_tika` folders with the preprocessed data.
 
+### Adding demo protocols to the tool
+
+If you want the tool to have some demo protocols in the dropdown, you can run `data/ctgov/09_MakePickleFile.ipynb` to generate a Pickle file which you can place in a folder "demo_data":
+
+![Demo data](screenshots/demo_protocols.png)
+
 ### Training the classifier model
 
 Go into the `train` folder and run
