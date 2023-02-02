@@ -285,6 +285,27 @@ You might want to set up an IP rule to make sure that only the front end app can
 
 You can do this by going into the Tika webapp, and selecting Networking and Access Restrictions. You can add whitelist rules for the IP addresses of the front end app.
 
+# Authentication
+
+The tool's online version has user authentication. This feature is optional and becomes enabled if you set environment variables to the appropriate values:
+
+```
+export FLASK_SECRET_KEY="clinicaltrialsecret101"
+export AUTH0_AUTH_URL="https://dev-jzg0b3h10nmydczi.us.auth0.com/authorize"
+export AUTH0_AUTH_SCOPE="email"
+export AUTH0_AUTH_TOKEN_URI="https://dev-jzg0b3h10nmydczi.us.auth0.com/oauth/token"
+export AUTH0_AUTH_USER_INFO_URL="https://dev-ogciuiv2nq3ju76c.us.auth0.com/userinfo"
+export AUTH0_AUTH_CLIENT_ID="7lHpbJwWnGR1Z40912jS8BfJ8iobmDQo"
+export AUTH0_AUTH_CLIENT_SECRET="[REDACTED]"
+export AUTH0_LOGOUT_URL="https://dev-jzg0b3h10nmydczi.us.auth0.com/v2/logout"
+export AUTH0_API_AUDIENCE="https://dev-jzg0b3h10nmydczi.us.auth0.com/api/v2/"
+export AUTH_FLASK_ROUTES="true"
+```
+
+You can get the correct values for Auth0 by creating an account and project at https://auth0.com/.
+
+If you do not set the values of the environment variables, the tool will run with no authentication.
+
 ## Built With
 
 - [Dash](https://dash.plot.ly/) - Main server and interactive components
