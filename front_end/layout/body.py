@@ -207,6 +207,13 @@ rows = [
     ),
 ]
 
+rows.append(html.Div(
+    [
+        html.A(html.Button('click to logout'), href='/logout')
+    ]
+)
+)
+
 rows.append(
 
     html.Div(

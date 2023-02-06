@@ -26,7 +26,8 @@ from util.risk_assessor import calculate_risk_level
 from util.score_to_risk_level_converter import get_risk_level_and_traffic_light
 from util.word_cloud_generator import WordCloudGenerator
 
-from dash_auth0_oauth.Auth0_auth import Auth0Auth
+# from dash_auth0_oauth.Auth0_auth import Auth0Auth
+from util.auth0 import Auth0Auth
 
 COMMIT_ID = os.environ.get('COMMIT_ID', "not found")
 
@@ -55,7 +56,9 @@ master_processor = MasterProcessor("models/condition_classifier.pkl.bz2",
                                    "models/simulation_classifier.pkl.bz2")
 
 dash_app = dash.Dash(
-    __name__, meta_tags=[{"name": "viewport", "content": "width=device-width"},
+    __name__,
+    url_base_pathname='/',
+    meta_tags=[{"name": "viewport", "content": "width=device-width"},
                          {"name": "description",
                           "content": "Analyse your Clinical Trial protocols and identify risk factors using Natural Language Processing, from Fast Data Science."}],
 )
@@ -76,6 +79,8 @@ dash_app.title = "Clinical Trial Risk Tool"
 server = dash_app.server  # For Google Cloud Platform
 app = dash_app.server  # For Azure
 
+
+
 # Create app layout
 dash_app.layout = get_body()
 
@@ -93,6 +98,10 @@ def wake_up_tika_web_app_on_page_load(location):
     :return: Some human-readable description to be displayed in a log view for diagnostics
     """
     print(f"Initialising Tika server")
+
+    # auth_user = app.request.cookies.get('AUTH-USER')
+    # print('auth user ' + auth_user)
+
     start_time = time.time()
     response = parser.from_buffer(io.BytesIO(b""), xmlContent=True)
     end_time = time.time()
