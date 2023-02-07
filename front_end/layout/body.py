@@ -105,6 +105,8 @@ explanation_options = [
     for explanation_option_desc, explanation_option in EXPLANATION_OPTIONS
 ]
 
+left_div = []
+
 # Construct the HTML elements of the UI.
 rows = [
     # Google Tag Manager
@@ -145,18 +147,7 @@ rows = [
     html.Div(
         [
             html.Div(
-                [
-                    # html.Img(
-                    #     # src=app.get_asset_url("logolg.svg"),
-                    #     id="plotly-image",
-                    #     style={
-                    #         "height": "60px",
-                    #         "width": "auto",
-                    #         "margin-bottom": "25px",
-                    #     },
-                    # )
-                    #
-                ],
+                left_div,
                 className="one-third column",
             ),
             html.Div(
@@ -213,7 +204,7 @@ auth0_auth_url = os.environ.get('AUTH0_AUTH_URL', None)
 
 
 if(auth0_auth_url != None):
-    rows.append(html.Div(
+    left_div.append(html.Div(
         [
             html.A(html.Button('click to login'), href='/login')
         ],
@@ -222,7 +213,7 @@ if(auth0_auth_url != None):
     )
     )
 
-    rows.append(html.Div(
+    left_div.append(html.Div(
         [
             html.A(html.Button('click to logout'), href='/logout')
         ],

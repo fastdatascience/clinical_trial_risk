@@ -4,7 +4,6 @@ import re
 import time
 import traceback
 
-import flask
 import dash
 # import dash_auth
 import dash_html_components as html
@@ -17,6 +16,8 @@ from dash.dependencies import State
 from layout.body import get_body, file_to_text
 from tika import parser
 from util import graph_callbacks
+# from dash_auth0_oauth.Auth0_auth import Auth0Auth
+from util.auth0 import Auth0Auth
 from util.clientside_callbacks import add_clientside_callbacks
 from util.pdf_parser import parse_pdf
 from util.pdf_report_generator import generate_pdf
@@ -25,11 +26,6 @@ from util.protocol_master_processor import MasterProcessor
 from util.risk_assessor import calculate_risk_level
 from util.score_to_risk_level_converter import get_risk_level_and_traffic_light
 from util.word_cloud_generator import WordCloudGenerator
-
-import flask
-
-# from dash_auth0_oauth.Auth0_auth import Auth0Auth
-from util.auth0 import Auth0Auth
 
 COMMIT_ID = os.environ.get('COMMIT_ID', "not found")
 
@@ -61,8 +57,8 @@ dash_app = dash.Dash(
     __name__,
     url_base_pathname='/',
     meta_tags=[{"name": "viewport", "content": "width=device-width"},
-                         {"name": "description",
-                          "content": "Analyse your Clinical Trial protocols and identify risk factors using Natural Language Processing, from Fast Data Science."}],
+               {"name": "description",
+                "content": "Analyse your Clinical Trial protocols and identify risk factors using Natural Language Processing, from Fast Data Science."}],
 )
 # auth = dash_auth.BasicAuth(
 #     dash_app,
@@ -74,14 +70,12 @@ auth0_auth_url = os.environ.get('AUTH0_AUTH_URL', None)
 # print("auth0_auth_url " + auth0_auth_url)
 # print("auth_user " + auth_user)
 
-if(auth0_auth_url != None):
+if (auth0_auth_url != None):
     auth = Auth0Auth(dash_app)
 
 dash_app.title = "Clinical Trial Risk Tool"
 server = dash_app.server  # For Google Cloud Platform
 app = dash_app.server  # For Azure
-
-
 
 # Create app layout
 dash_app.layout = get_body()
@@ -539,7 +533,8 @@ def update_wordcloud(tokenised_pages, condition_to_pages):
         Input("save_annotation", "n_clicks"),
         State("num_subjects", "value"),
         State("dataset", "value")
-    ]
+    ],
+    prevent_initial_call=True
 )
 def save_annotation(n_clicks, num_subjects, file_name):
     """
