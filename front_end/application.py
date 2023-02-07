@@ -26,6 +26,8 @@ from util.risk_assessor import calculate_risk_level
 from util.score_to_risk_level_converter import get_risk_level_and_traffic_light
 from util.word_cloud_generator import WordCloudGenerator
 
+import flask
+
 # from dash_auth0_oauth.Auth0_auth import Auth0Auth
 from util.auth0 import Auth0Auth
 

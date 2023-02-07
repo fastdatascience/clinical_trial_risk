@@ -209,14 +209,13 @@ rows = [
 
 
 auth0_auth_url = os.environ.get('AUTH0_AUTH_URL', None)
-# auth_user = flask.request.cookies.get('AUTH-USER')
 # print("auth0_auth_url " + auth0_auth_url)
-# print("auth_user " + auth_user)
+
 
 if(auth0_auth_url != None):
     rows.append(html.Div(
         [
-            html.A(html.Button('click to login'), href='/')
+            html.A(html.Button('click to login'), href='/login')
         ]
         )
     )
@@ -711,6 +710,8 @@ rows.append(
 
 
 def get_body():
+    # auth_user = flask.request.cookies.get('AUTH-USER')
+    # print("auth_user " + auth_user)
     return html.Div(
         rows,
         id="mainContainer",

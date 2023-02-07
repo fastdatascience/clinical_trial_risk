@@ -9,7 +9,7 @@ from urllib.parse import urlencode, urljoin
 
 from requests import request
 
-from dash_auth0_oauth.auth import Auth
+from .auth import Auth
 
 COOKIE_EXPIRY = 60 * 60 * 24 * 14
 COOKIE_AUTH_USER_NAME = 'AUTH-USER'
@@ -35,9 +35,16 @@ else:
 
 class Auth0Auth(Auth):
     def __init__(self, app):
-        Auth.__init__(self, app)
+        Auth.__init__(self, app, _overwrite_index=False)
         app.server.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY')
         app.server.config['SESSION_TYPE'] = 'filesystem'
+
+        @app.server.route('/login')
+        def login():
+            if self.is_authorized():
+                return flask.redirect('/', code=302)
+            else:
+                return self.login_request()
 
         @app.server.route('/login/callback')
         def callback():
