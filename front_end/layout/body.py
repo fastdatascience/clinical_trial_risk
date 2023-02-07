@@ -216,15 +216,20 @@ if(auth0_auth_url != None):
     rows.append(html.Div(
         [
             html.A(html.Button('click to login'), href='/login')
-        ]
-        )
+        ],
+        id='login-button',
+        style={'display': 'block'}
+    )
     )
 
     rows.append(html.Div(
         [
             html.A(html.Button('click to logout'), href='/logout')
-        ]
-        )
+        ],
+        id='logout-button',
+        style={'display': 'block'}
+    )
+
     )
 
 rows.append(

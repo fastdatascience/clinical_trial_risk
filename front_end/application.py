@@ -88,6 +88,21 @@ dash_app.layout = get_body()
 
 
 @dash_app.callback(
+   output=[Output("login-button", "style"),
+           Output("logout-button", "style")
+          ],
+   inputs=[Input("location", "href")]
+)
+def show_hide_login_button(location):
+    auth_user = flask.request.cookies.get('AUTH-USER')
+    if auth_user is None:
+        return [{'display': 'block'}, {'display': 'none'}]
+    else:
+        return [{'display': 'none'}, {'display': 'block'}]
+
+
+
+@dash_app.callback(
     output=[Output("log_tika", "children")],
     inputs=[Input("location", "href")]
 )
