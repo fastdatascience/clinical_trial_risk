@@ -12,6 +12,7 @@ import pandas as pd
 from dash import ctx
 from dash import dcc, html, Input, Output
 from dash.dependencies import State
+import flask
 
 from layout.body import get_body, file_to_text
 from tika import parser
