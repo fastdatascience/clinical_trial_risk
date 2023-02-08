@@ -1,4 +1,6 @@
+import base64
 import io
+import json
 import os
 import re
 import time
@@ -7,12 +9,12 @@ import traceback
 import dash
 # import dash_auth
 import dash_html_components as html
+import flask
 import numpy as np
 import pandas as pd
 from dash import ctx
 from dash import dcc, html, Input, Output
 from dash.dependencies import State
-import flask
 
 from layout.body import get_body, file_to_text
 from tika import parser
@@ -21,12 +23,14 @@ from util import graph_callbacks
 from util.auth0 import Auth0Auth
 from util.clientside_callbacks import add_clientside_callbacks
 from util.pdf_parser import parse_pdf
-from util.pdf_report_generator import generate_pdf
 from util.progress_bar import make_progress_graph
-from util.protocol_master_processor import MasterProcessor
-from util.risk_assessor import calculate_risk_level
-from util.score_to_risk_level_converter import get_risk_level_and_traffic_light
-from util.word_cloud_generator import WordCloudGenerator
+
+if not os.environ.get("UI_ONLY"):
+    from util.risk_assessor import calculate_risk_level
+    from util.pdf_report_generator import generate_pdf
+    from util.score_to_risk_level_converter import get_risk_level_and_traffic_light
+    from util.protocol_master_processor import MasterProcessor
+    from util.word_cloud_generator import WordCloudGenerator
 
 COMMIT_ID = os.environ.get('COMMIT_ID', "not found")
 
@@ -37,22 +41,23 @@ COMMIT_ID = os.environ.get('COMMIT_ID', "not found")
 #     'admin': 'DsRNJmZ'
 # }
 
-word_cloud_generator = WordCloudGenerator("models/idfs_for_word_cloud.pkl.bz2")
-master_processor = MasterProcessor("models/condition_classifier.pkl.bz2",
-                                   "models/phase_rf_classifier.pkl.bz2",
-                                   "models/spacy-textcat-phase-04-model-best",
-                                   "models/sap_classifier_document_level.pkl.bz2",
-                                   "models/sap_classifier.pkl.bz2",
-                                   "models/effect_estimate_classifier.pkl.bz2",
-                                   "models/num_subjects_classifier.pkl.bz2",
-                                   "models/subjects_classifier_document_level.pkl.bz2",
-                                   "models/arms_classifier_document_level.pkl.bz2",
-                                   "models/spacy-textcat-arms-21-model-best",
-                                   "models/spacy-textcat-international-11-model-best",
-                                   "models/spacy-textcat-country-16-model-best",
-                                   "models/international_classifier.pkl.bz2",
-                                   "models/country_ensemble_model.pkl.bz2",
-                                   "models/simulation_classifier.pkl.bz2")
+if not os.environ.get("UI_ONLY"):
+    word_cloud_generator = WordCloudGenerator("models/idfs_for_word_cloud.pkl.bz2")
+    master_processor = MasterProcessor("models/condition_classifier.pkl.bz2",
+                                       "models/phase_rf_classifier.pkl.bz2",
+                                       "models/spacy-textcat-phase-04-model-best",
+                                       "models/sap_classifier_document_level.pkl.bz2",
+                                       "models/sap_classifier.pkl.bz2",
+                                       "models/effect_estimate_classifier.pkl.bz2",
+                                       "models/num_subjects_classifier.pkl.bz2",
+                                       "models/subjects_classifier_document_level.pkl.bz2",
+                                       "models/arms_classifier_document_level.pkl.bz2",
+                                       "models/spacy-textcat-arms-21-model-best",
+                                       "models/spacy-textcat-international-11-model-best",
+                                       "models/spacy-textcat-country-16-model-best",
+                                       "models/international_classifier.pkl.bz2",
+                                       "models/country_ensemble_model.pkl.bz2",
+                                       "models/simulation_classifier.pkl.bz2")
 
 dash_app = dash.Dash(
     __name__,
@@ -83,10 +88,10 @@ dash_app.layout = get_body()
 
 
 @dash_app.callback(
-   output=[Output("login-button", "style"),
-           Output("logout-button", "style")
-          ],
-   inputs=[Input("location", "href")]
+    output=[Output("login-button", "style"),
+            Output("logout-button", "style")
+            ],
+    inputs=[Input("location", "href")]
 )
 def show_hide_login_button(location):
     auth_user = flask.request.cookies.get('AUTH-USER')
@@ -94,7 +99,6 @@ def show_hide_login_button(location):
         return [{'display': 'block'}, {'display': 'none'}]
     else:
         return [{'display': 'none'}, {'display': 'block'}]
-
 
 
 @dash_app.callback(
@@ -548,6 +552,84 @@ def save_annotation(n_clicks, num_subjects, file_name):
     with open("../train/num_subjects_classifier_annotations.py", "a") as f:
         f.write(f"'{file_name}':'{num_subjects}',\n")
 
+
+# BEGIN FEATURE CONFIG DOWNLOADS
+
+@dash_app.callback(
+    [
+        Output("download", "data")
+    ],
+    [
+        Input("btn", "n_clicks"),
+        State("configuration_table", "data"),
+        State("configuration_table", "columns"),
+        State("tertiles_table", "data"),
+        State("tertiles_table", "columns")
+    ]
+)
+def generate_json(n_nlicks, wt_data, wt_columns, tt_data, tt_columns):
+    if n_nlicks == 0:
+        return [None]
+    cdf = to_df(wt_columns, wt_data)
+    tdf = to_df(tt_columns, tt_data)
+    res = {'configuration_data': cdf, 'tertile_data': tdf}
+    excel_file_name = "res.json"
+
+    return [dcc.send_data_frame(pd.DataFrame.from_dict(res).to_json, excel_file_name)]
+
+
+@dash_app.callback(
+    Output("tertiles_table", "data"),
+    Output("configuration_table", "data"),
+    Input('upload-config-data', 'contents'),
+    State('upload-config-data', 'filename'),
+    State('upload-config-data', 'last_modified')
+)
+def upload_config(contents, file_name, file_date):
+    content_type, content_string = contents.split(',')
+
+    decoded = base64.b64decode(content_string)
+    x = json.loads(decoded.decode('utf-8'))
+    td = x["tertile_data"]
+    cd = x["configuration_data"]
+
+    tdd = transform_data(td)
+    cdd = transform_data(cd)
+    print(tdd)
+    print(cdd)
+    return [tdd, cdd]
+
+
+def to_df(columns, data):
+    x = {}
+    for col in columns:
+        column_data = [r[col['id']] for r in data]
+        if column_data is not None:
+            col_name = col['name']
+            x[col_name] = column_data
+
+    return x
+
+
+def transform_data(x):
+    l = []
+    for a in x:
+        if x[a] is not None:
+            arr = x[a]
+
+            for b in arr:
+                if l:
+                    for sl in l:
+                        if a not in sl:
+                            sl[a] = b
+                            break
+                else:
+                    y = {a: b}
+                    l.append(y)
+    return l
+
+
+# END FEATURE CONFIG DOWNLOADS
 
 # Make sure the Javascript callbacks are added too.
 add_clientside_callbacks(dash_app)
