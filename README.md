@@ -298,19 +298,24 @@ The tool's online version has user authentication. This feature is optional and 
 ```
 export FLASK_SECRET_KEY="clinicaltrialsecret101"
 export AUTH0_AUTH_URL="https://dev-jzg0b3h10nmydczi.us.auth0.com/authorize"
-export AUTH0_AUTH_SCOPE="email"
+export AUTH0_AUTH_SCOPE="openid profile email"
 export AUTH0_AUTH_TOKEN_URI="https://dev-jzg0b3h10nmydczi.us.auth0.com/oauth/token"
-export AUTH0_AUTH_USER_INFO_URL="https://dev-ogciuiv2nq3ju76c.us.auth0.com/userinfo"
+export AUTH0_AUTH_USER_INFO_URL="https://dev-jzg0b3h10nmydczi.us.auth0.com/userinfo"
 export AUTH0_AUTH_CLIENT_ID="7lHpbJwWnGR1Z40912jS8BfJ8iobmDQo"
 export AUTH0_AUTH_CLIENT_SECRET="[REDACTED]"
 export AUTH0_LOGOUT_URL="https://dev-jzg0b3h10nmydczi.us.auth0.com/v2/logout"
 export AUTH0_API_AUDIENCE="https://dev-jzg0b3h10nmydczi.us.auth0.com/api/v2/"
 export AUTH_FLASK_ROUTES="true"
+export DOWNLOAD_DIRECTORY=/tmp/downloads
 ```
 
-You can get the correct values for Auth0 by creating an account and project at https://auth0.com/.
+You can get the correct values for Auth0 by creating a free account and project at https://auth0.com/.
 
 If you do not set the values of the environment variables, the tool will run with no authentication.
+
+# Storage
+
+Optionally, if you want to allow users to save/load configurations, you will need to deploy with Azure Blob Storage or a similar storage solution where configurations can be saved.
 
 ## Built With
 

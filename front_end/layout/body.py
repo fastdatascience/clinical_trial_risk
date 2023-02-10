@@ -650,6 +650,7 @@ rows.append(
                             [
 
                                 html.H3("Save and load configuration"),
+                                html.P("You can customize the configuration (sample size tertiles and feature weights), and save and load configurations."),
                                 html.Div([
                                     html.Div(
                                         [
@@ -669,6 +670,8 @@ rows.append(
                                         [
                                             html.Div(
                                                 [
+                                                    html.P("Load a configuration from your computer",
+                                                           className="control_label"),
                                                     dcc.Upload(
                                                         id='upload-config-data',
                                                         children=html.Div(
