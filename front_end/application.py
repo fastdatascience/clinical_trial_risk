@@ -409,7 +409,8 @@ def fill_table(
         State("word_cloud", "src"),
         State("log", "children"),
         State("log_scoring", "children"),
-    ]
+    ],
+    prevent_initial_call=True
 )
 def export_pdf(*args):
     return generate_pdf(*args)
@@ -502,7 +503,7 @@ def save_to_server(n_nlicks, wt_data, wt_columns, tt_data, tt_columns):
     Input("config_dataset", "value"),
     prevent_initial_call=True
 )
-def upload_config(contents,values):
+def upload_config(contents, values):
     if values is None:
         content_type, content_string = contents.split(',')
         decoded = base64.b64decode(content_string)
@@ -512,7 +513,7 @@ def upload_config(contents,values):
         auth_user = flask.request.cookies.get('AUTH-USER')
         f = user_folder(auth_user)
         file_path = os.path.join(DOWNLOAD_DIRECTORY, f)
-        file_path = os.path.join(file_path,values)
+        file_path = os.path.join(file_path, values)
 
         with open(file_path) as json_file:
             data = json.load(json_file)
@@ -558,8 +559,6 @@ def update_config_options(location):
 #         return [tdd, cdd]
 
 
-
-
 def to_df(columns, data):
     x = {}
     for col in columns:
@@ -591,7 +590,7 @@ def transform_data(x):
 
 def save_hash_to_json(data, folder_name, user):
     _file_name = str(datetime.datetime.now())
-    _file_name = _file_name.replace(" ","_")
+    _file_name = _file_name.replace(" ", "_")
     _file_name = f'{_file_name}.json'
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
@@ -605,6 +604,7 @@ def save_hash_to_json(data, folder_name, user):
 
     with open(file_path, 'w') as file:
         json.dump(data, file)
+
 
 def user_folder(email):
     return email.replace("@", "_").replace(".", "_")

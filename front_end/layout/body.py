@@ -219,55 +219,6 @@ if (auth0_auth_url != None):
     )
 
 rows.append(
-    html.Div(
-        [
-            html.Div(
-                [
-                    html.Button("Save To Server", id="btn_save_server"),
-                    dcc.Download(id="download_server"),
-                    html.P("Choose a configuration", className="control_label"),
-                    dcc.Dropdown(
-                        id="config_dataset",
-                        multi=False,
-                        className="dcc_control"
-                    )
-                ],
-                id='server-div',
-                style={'display': 'block'},
-                className="pretty_container four columns",
-            ),
-            html.Div(
-                [
-                    html.Div([html.Button("Save To PC", id="btn_save_pc"),dcc.Download(id="download")]),
-                    html.Div(
-                        [
-                            dcc.Upload(
-                                id='upload-config-data',
-                                children=html.Div(['Drag and Drop Configuration', html.Br(), ' or ', html.Br(),html.A('Select File from your Computer')]),
-                                style={
-                                    # 'width': '100%',
-                                    'height': '120px',
-                                    'lineHeight': '40px',
-                                    'borderWidth': '1px',
-                                    'borderStyle': 'dashed',
-                                    'borderRadius': '5px',
-                                    'textAlign': 'center',
-                                    'margin': '10px'
-                                },
-                                accept="application/json"),
-                        ]
-                    ),
-                    html.Div(id='output-config-data-upload'),
-                ],
-                className="pretty_container four columns",
-            )
-        ],
-        className="row flex-display",
-        style={"align": "center"}
-    )
-)
-
-rows.append(
 
     html.Div(
         [
@@ -697,8 +648,58 @@ rows.append(
 
                         html.Div(
                             [
+
+                                html.H3("Save and load configuration"),
+                                html.Div([
+                                    html.Div(
+                                        [
+                                            html.P("Load a configuration from the server", className="control_label"),
+                                            dcc.Dropdown(
+                                                id="config_dataset",
+                                                multi=False,
+                                                className="dcc_control"
+                                            ),
+                                            html.Button("Save To Server", id="btn_save_server"),
+                                            dcc.Download(id="download_server"),
+                                        ],
+                                        id='server-div',
+                                        className="six columns",
+                                    ),
+                                    html.Div(
+                                        [
+                                            html.Div(
+                                                [
+                                                    dcc.Upload(
+                                                        id='upload-config-data',
+                                                        children=html.Div(
+                                                            [html.A('Load Configuration File from your Computer')]),
+                                                        style={
+                                                            # 'width': '100%',
+                                                            #  'height': '120px',
+                                                            'lineHeight': '40px',
+                                                            'borderWidth': '1px',
+                                                            'borderStyle': 'dashed',
+                                                            'borderRadius': '5px',
+                                                            'textAlign': 'center',
+                                                            'margin': '10px'
+                                                        },
+                                                        accept="application/json"),
+                                                ]
+                                            ),
+                                            html.Div(id='output-config-data-upload'),
+
+                                            html.Div(
+                                                [html.Button("Save To PC", id="btn_save_pc"),
+                                                 dcc.Download(id="download")]),
+
+                                        ], className="six columns",
+                                    ),
+                                ], className="row flex-display", ),
+
+                                html.H3("Configure sample size tertiles"),
                                 html.P(
                                     "The model characterises trials as small, medium and large according to the number of participants. Since early phase trials are smaller than later trials, tertiles are used to define what counts as e.g. a small HIV Phase I trial. The table of tertiles is given below. The tertiles were derived from a sample of 21 trials in LMICs, but have been rounded and manually adjusted based on statistics from ClinicalTrials.gov data."),
+
                                 dash_table.DataTable(
                                     id="tertiles_table",
                                     editable=True,
@@ -707,6 +708,7 @@ rows.append(
                                     data=tertile_finder.DF_TERTILES_DATA_FOR_DASH,
                                     columns=tertile_finder.DF_TERTILES_COLUMNS_FOR_DASH
                                 ),
+                                html.H3("Configure weights"),
                                 html.P(
                                     "You can configure the weights and thresholds for the model below. This allows you to set the importance of the SAP vs the nunber of arms, for example."),
                                 dash_table.DataTable(
