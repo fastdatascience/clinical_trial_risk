@@ -1,4 +1,7 @@
+import base64
+import datetime
 import io
+import json
 import os
 import re
 import time
@@ -29,6 +32,8 @@ from util.score_to_risk_level_converter import get_risk_level_and_traffic_light
 from util.word_cloud_generator import WordCloudGenerator
 
 COMMIT_ID = os.environ.get('COMMIT_ID', "not found")
+
+DOWNLOAD_DIRECTORY = os.environ.get('DOWNLOAD_DIRECTORY', 'downloads')
 
 # cache = diskcache.Cache("./cache")
 # long_callback_manager = DiskcacheLongCallbackManager(cache)
@@ -83,18 +88,18 @@ dash_app.layout = get_body()
 
 
 @dash_app.callback(
-   output=[Output("login-button", "style"),
-           Output("logout-button", "style")
-          ],
-   inputs=[Input("location", "href")]
+    output=[Output("login-button", "style"),
+            Output("logout-button", "style"),
+            Output("server-div", "style")
+            ],
+    inputs=[Input("location", "href")]
 )
 def show_hide_login_button(location):
     auth_user = flask.request.cookies.get('AUTH-USER')
     if auth_user is None:
-        return [{'display': 'block'}, {'display': 'none'}]
+        return [{'display': 'block'}, {'display': 'none'}, {'display': 'none'}]
     else:
-        return [{'display': 'none'}, {'display': 'block'}]
-
+        return [{'display': 'none'}, {'display': 'block'}, {'display': 'block'}]
 
 
 @dash_app.callback(
@@ -438,6 +443,168 @@ def download_table(download_button_clicks, data, columns):
     excel_file_name = re.sub(".pdf", "", file_name) + ".xlsx"
 
     return [dcc.send_data_frame(df.to_excel, excel_file_name, sheet_name=f"Risk score calculation", index=False)]
+
+
+@dash_app.callback(
+    [
+        Output("download", "data")
+    ],
+    [
+        Input("btn_save_pc", "n_clicks"),
+        State("configuration_table", "data"),
+        State("configuration_table", "columns"),
+        State("tertiles_table", "data"),
+        State("tertiles_table", "columns")
+    ],
+    prevent_initial_call=True
+)
+def generate_json(n_nlicks, wt_data, wt_columns, tt_data, tt_columns):
+    if n_nlicks == 0:
+        return [None]
+    cdf = to_df(wt_columns, wt_data)
+    tdf = to_df(tt_columns, tt_data)
+    res = {'configuration_data': cdf, 'tertile_data': tdf}
+    file_name = "res.json"
+
+    return [dcc.send_data_frame(pd.DataFrame.from_dict(res).to_json, file_name)]
+
+
+@dash_app.callback(
+    [
+        Output("download_server", "data")
+    ],
+    [
+        Input("btn_save_server", "n_clicks"),
+        State("configuration_table", "data"),
+        State("configuration_table", "columns"),
+        State("tertiles_table", "data"),
+        State("tertiles_table", "columns")
+    ],
+    prevent_initial_call=True
+)
+def save_to_server(n_nlicks, wt_data, wt_columns, tt_data, tt_columns):
+    if n_nlicks == 0:
+        return [None]
+    cdf = to_df(wt_columns, wt_data)
+    tdf = to_df(tt_columns, tt_data)
+    data = {'configuration_data': cdf, 'tertile_data': tdf}
+    auth_user = flask.request.cookies.get('AUTH-USER')
+    save_hash_to_json(data, DOWNLOAD_DIRECTORY, auth_user)
+
+
+@dash_app.callback(
+    Output("tertiles_table", "data"),
+    Output("configuration_table", "data"),
+    Input('upload-config-data', 'contents'),
+    Input("config_dataset", "value"),
+    prevent_initial_call=True
+)
+def upload_config(contents,values):
+    if values is None:
+        content_type, content_string = contents.split(',')
+        decoded = base64.b64decode(content_string)
+        data = json.loads(decoded.decode('utf-8'))
+
+    else:
+        auth_user = flask.request.cookies.get('AUTH-USER')
+        f = user_folder(auth_user)
+        file_path = os.path.join(DOWNLOAD_DIRECTORY, f)
+        file_path = os.path.join(file_path,values)
+
+        with open(file_path) as json_file:
+            data = json.load(json_file)
+    td = data["tertile_data"]
+    cd = data["configuration_data"]
+
+    tdd = transform_data(td)
+    cdd = transform_data(cd)
+    return [tdd, cdd]
+
+
+@dash_app.callback(
+    Output("config_dataset", "options"),
+    Input("location", "href"),
+)
+def update_config_options(location):
+    auth_user = flask.request.cookies.get('AUTH-USER')
+    f = user_folder(auth_user)
+    file_path = os.path.join(DOWNLOAD_DIRECTORY, f)
+
+    file_names = os.listdir(file_path)
+
+    return [{"label": d, "value": d} for d in file_names]
+
+
+# @dash_app.callback(
+#     Output("tertiles_table", "data"),
+#     Output("configuration_table", "data"),
+#     Input("config_dataset", "value"),
+# )
+# def load_from_server(value):
+#     auth_user = flask.request.cookies.get('AUTH-USER')
+#     f = user_folder(auth_user)
+#     file_path = os.path.join(DOWNLOAD_DIRECTORY, f)
+#
+#     with open(file_path) as json_file:
+#         data = json.load(json_file)
+#         td = data["tertile_data"]
+#         cd = data["configuration_data"]
+#
+#         tdd = transform_data(td)
+#         cdd = transform_data(cd)
+#         return [tdd, cdd]
+
+
+
+
+def to_df(columns, data):
+    x = {}
+    for col in columns:
+        column_data = [r[col['id']] for r in data]
+        if column_data is not None:
+            col_name = col['name']
+            x[col_name] = column_data
+
+    return x
+
+
+def transform_data(x):
+    l = []
+    for a in x:
+        if x[a] is not None:
+            arr = x[a]
+
+            if l:
+                for b in arr:
+                    for sl in l:
+                        if a not in sl:
+                            sl[a] = b
+                            break
+            else:
+                for b in arr:
+                    l.append({a: b})
+    return l
+
+
+def save_hash_to_json(data, folder_name, user):
+    _file_name = str(datetime.datetime.now())
+    _file_name = _file_name.replace(" ","_")
+    _file_name = f'{_file_name}.json'
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name)
+
+    fl = user_folder(user)
+    f = os.path.join(folder_name, fl)
+    if not os.path.exists(f):
+        os.makedirs(f)
+
+    file_path = os.path.join(f, _file_name)
+
+    with open(file_path, 'w') as file:
+        json.dump(data, file)
+
+def user_folder(email):
+    return email.replace("@", "_").replace(".", "_")
 
 
 @dash_app.callback(

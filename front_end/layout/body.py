@@ -204,24 +204,70 @@ auth0_auth_url = os.environ.get('AUTH0_AUTH_URL', None)
 
 
 if(auth0_auth_url != None):
-    left_div.append(html.Div(
-        [
-            html.A(html.Button('click to login'), href='/login')
-        ],
-        id='login-button',
-        style={'display': 'block'}
-    )
-    )
-
-    left_div.append(html.Div(
-        [
-            html.A(html.Button('click to logout'), href='/logout')
-        ],
-        id='logout-button',
-        style={'display': 'block'}
+    left_div.append(
+        html.Div(
+            [html.A(html.Button('click to login'), href='/login')],
+            id='login-button',
+            style={'display': 'block'}
+        )
     )
 
+    left_div.append(
+        html.Div(
+            [html.A(html.Button('click to logout'), href='/logout')],
+            id='logout-button',
+            style={'display': 'block'}
+        )
     )
+
+rows.append(
+    html.Div(
+        [
+            html.Div(
+                [
+                    html.Button("Save To Server", id="btn_save_server"),
+                    dcc.Download(id="download_server"),
+                    html.P("Choose a configuration", className="control_label"),
+                    dcc.Dropdown(
+                        id="config_dataset",
+                        multi=False,
+                        className="dcc_control"
+                    )
+                ],
+                id='server-div',
+                style={'display': 'block'},
+                className="pretty_container four columns",
+            ),
+            html.Div(
+                [
+                    html.Div([html.Button("Save To PC", id="btn_save_pc"),dcc.Download(id="download")]),
+                    html.Div(
+                        [
+                            dcc.Upload(
+                                id='upload-config-data',
+                                children=html.Div(['Drag and Drop Configuration', html.Br(), ' or ', html.Br(),html.A('Select File from your Computer')]),
+                                style={
+                                    # 'width': '100%',
+                                    'height': '120px',
+                                    'lineHeight': '40px',
+                                    'borderWidth': '1px',
+                                    'borderStyle': 'dashed',
+                                    'borderRadius': '5px',
+                                    'textAlign': 'center',
+                                    'margin': '10px'
+                                },
+                                accept="application/json"),
+                        ]
+                    ),
+                    html.Div(id='output-config-data-upload'),
+                ],
+                className="pretty_container four columns",
+            )
+        ],
+        className="row flex-display",
+        style={"align": "center"}
+    )
+)
 
 rows.append(
 
