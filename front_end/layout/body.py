@@ -32,11 +32,12 @@ try:
         # FOR TRAINING ONLY
         # with bz2.open("../data/ctgov/protocols_small.pkl.bz2", "rb") as f:
         file_to_text = pkl.load(f)
-    with open("../train/num_subjects_classifier_annotations.py", "r") as f:
-        for l in f:
-            file_name = re.sub(r'\'.+', '', re.sub(r'^\s+\'', '', l.strip()))
-            if file_name in file_to_text:
-                del file_to_text[file_name]
+    if os.path.exists("../train") and os.path.isfile("../train/num_subjects_classifier_annotations.py"):
+        with open("../train/num_subjects_classifier_annotations.py", "r") as f:
+            for l in f:
+                file_name = re.sub(r'\'.+', '', re.sub(r'^\s+\'', '', l.strip()))
+                if file_name in file_to_text:
+                    del file_to_text[file_name]
 except:
     print("Error loading demo protocols")
     print_exc()
@@ -183,7 +184,8 @@ rows = [
                     "The tool does not store your data.",
                     html.Br(),
                     html.A("FAQ", href="https://clinicaltrialrisk.org/faq/", target="faq"), " • ",
-                    html.A("Privacy policy", href="https://clinicaltrialrisk.org/privacy-policy/", target="privacy"), " • ",
+                    html.A("Privacy policy", href="https://clinicaltrialrisk.org/privacy-policy/", target="privacy"),
+                    " • ",
                     html.A("Show tutorial video", id="show-video-button"), " • ",
                     html.A("Read our blog", href="https://clinicaltrialrisk.org/blog/", target="blog")
                 ],
