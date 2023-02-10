@@ -10,12 +10,12 @@ import traceback
 import dash
 # import dash_auth
 import dash_html_components as html
+import flask
 import numpy as np
 import pandas as pd
 from dash import ctx
 from dash import dcc, html, Input, Output
 from dash.dependencies import State
-import flask
 
 from layout.body import get_body, file_to_text
 from tika import parser
@@ -24,12 +24,14 @@ from util import graph_callbacks
 from util.auth0 import Auth0Auth
 from util.clientside_callbacks import add_clientside_callbacks
 from util.pdf_parser import parse_pdf
-from util.pdf_report_generator import generate_pdf
 from util.progress_bar import make_progress_graph
-from util.protocol_master_processor import MasterProcessor
-from util.risk_assessor import calculate_risk_level
-from util.score_to_risk_level_converter import get_risk_level_and_traffic_light
-from util.word_cloud_generator import WordCloudGenerator
+
+if not os.environ.get("UI_ONLY"):
+    from util.risk_assessor import calculate_risk_level
+    from util.pdf_report_generator import generate_pdf
+    from util.score_to_risk_level_converter import get_risk_level_and_traffic_light
+    from util.protocol_master_processor import MasterProcessor
+    from util.word_cloud_generator import WordCloudGenerator
 
 COMMIT_ID = os.environ.get('COMMIT_ID', "not found")
 
@@ -42,22 +44,23 @@ DOWNLOAD_DIRECTORY = os.environ.get('DOWNLOAD_DIRECTORY', 'downloads')
 #     'admin': 'DsRNJmZ'
 # }
 
-word_cloud_generator = WordCloudGenerator("models/idfs_for_word_cloud.pkl.bz2")
-master_processor = MasterProcessor("models/condition_classifier.pkl.bz2",
-                                   "models/phase_rf_classifier.pkl.bz2",
-                                   "models/spacy-textcat-phase-04-model-best",
-                                   "models/sap_classifier_document_level.pkl.bz2",
-                                   "models/sap_classifier.pkl.bz2",
-                                   "models/effect_estimate_classifier.pkl.bz2",
-                                   "models/num_subjects_classifier.pkl.bz2",
-                                   "models/subjects_classifier_document_level.pkl.bz2",
-                                   "models/arms_classifier_document_level.pkl.bz2",
-                                   "models/spacy-textcat-arms-21-model-best",
-                                   "models/spacy-textcat-international-11-model-best",
-                                   "models/spacy-textcat-country-16-model-best",
-                                   "models/international_classifier.pkl.bz2",
-                                   "models/country_ensemble_model.pkl.bz2",
-                                   "models/simulation_classifier.pkl.bz2")
+if not os.environ.get("UI_ONLY"):
+    word_cloud_generator = WordCloudGenerator("models/idfs_for_word_cloud.pkl.bz2")
+    master_processor = MasterProcessor("models/condition_classifier.pkl.bz2",
+                                       "models/phase_rf_classifier.pkl.bz2",
+                                       "models/spacy-textcat-phase-04-model-best",
+                                       "models/sap_classifier_document_level.pkl.bz2",
+                                       "models/sap_classifier.pkl.bz2",
+                                       "models/effect_estimate_classifier.pkl.bz2",
+                                       "models/num_subjects_classifier.pkl.bz2",
+                                       "models/subjects_classifier_document_level.pkl.bz2",
+                                       "models/arms_classifier_document_level.pkl.bz2",
+                                       "models/spacy-textcat-arms-21-model-best",
+                                       "models/spacy-textcat-international-11-model-best",
+                                       "models/spacy-textcat-country-16-model-best",
+                                       "models/international_classifier.pkl.bz2",
+                                       "models/country_ensemble_model.pkl.bz2",
+                                       "models/simulation_classifier.pkl.bz2")
 
 dash_app = dash.Dash(
     __name__,

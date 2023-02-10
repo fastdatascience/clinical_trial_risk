@@ -1,8 +1,7 @@
+import bz2
 import os
 import pickle as pkl
 import re
-import bz2
-import pickle as pkl
 from traceback import print_exc
 
 import dash_core_components as dcc
@@ -17,8 +16,6 @@ from util.tertile_provider import DefaultSampleSizeTertileProvider
 
 tertile_finder = DefaultSampleSizeTertileProvider("sample_size_tertiles.csv")
 
-
-
 parameter_provider = DefaultParameterProvider("parameter_weights.csv")
 
 # Google Tag Manager
@@ -32,8 +29,8 @@ dataset_selector_style = None
 
 try:
     with bz2.open("demo_data/demo_protocols.pkl.bz2", "rb") as f:
-    # FOR TRAINING ONLY
-    # with bz2.open("../data/ctgov/protocols_small.pkl.bz2", "rb") as f:
+        # FOR TRAINING ONLY
+        # with bz2.open("../data/ctgov/protocols_small.pkl.bz2", "rb") as f:
         file_to_text = pkl.load(f)
     with open("../train/num_subjects_classifier_annotations.py", "r") as f:
         for l in f:
@@ -41,7 +38,7 @@ try:
             if file_name in file_to_text:
                 del file_to_text[file_name]
 except:
-    print ("Error loading demo protocols")
+    print("Error loading demo protocols")
     print_exc()
 
 if False:
@@ -198,26 +195,26 @@ rows = [
     ),
 ]
 
-
 auth0_auth_url = os.environ.get('AUTH0_AUTH_URL', None)
 # print("auth0_auth_url " + auth0_auth_url)
 
 
-if(auth0_auth_url != None):
-    left_div.append(
-        html.Div(
-            [html.A(html.Button('click to login'), href='/login')],
-            id='login-button',
-            style={'display': 'block'}
-        )
+if (auth0_auth_url != None):
+    left_div.append(html.Div(
+        [
+            html.A(html.Button('click to login'), href='/login')
+        ],
+        id='login-button',
+        style={'display': 'none'}
+    )
     )
 
-    left_div.append(
-        html.Div(
-            [html.A(html.Button('click to logout'), href='/logout')],
-            id='logout-button',
-            style={'display': 'block'}
-        )
+    left_div.append(html.Div(
+        [
+            html.A(html.Button('click to logout'), href='/logout')
+        ],
+        id='logout-button',
+        style={'display': 'none'}
     )
 
 rows.append(
@@ -284,8 +281,9 @@ rows.append(
                         className="dcc_control",
                         style=dataset_selector_style
                     ),
-                    html.A(children=[html.P("Click to view PDF", className="control_label")], target="ctgov", style={"display":"none"}, id="original_file_link"),
-                    html.P("or", style={"align":"center"}, className="control_label"),
+                    html.A(children=[html.P("Click to view PDF", className="control_label")], target="ctgov",
+                           style={"display": "none"}, id="original_file_link"),
+                    html.P("or", style={"align": "center"}, className="control_label"),
                     dcc.Upload(id='upload-data',
                                children=html.Div([
                                    'Drag and Drop Protocol PDF', html.Br(), ' or ', html.Br(),
@@ -476,7 +474,8 @@ rows.append(
                     html.Span(
                         [
                             html.P(["Number of subjects ", html.Span("", id="subjects_traffic_light"), " ",
-                                    html.Span(html.Span("⚠ Low confidence! ", style={"color":"red"}), id="is_num_subjects_low_confidence",
+                                    html.Span(html.Span("⚠ Low confidence! ", style={"color": "red"}),
+                                              id="is_num_subjects_low_confidence",
                                               style={"display": "none"}),
                                     html.A(html.Sup("explain"), id="explain_num_subjects",
                                            )],
@@ -606,7 +605,7 @@ rows.append(
 
                     ),
 
-                    html.Button("Save annotation", id="save_annotation", style={"visibility":"hidden"}),
+                    html.Button("Save annotation", id="save_annotation", style={"visibility": "hidden"}),
 
                     html.Button("Send feedback to developers", id="send_feedback"),
 
@@ -707,7 +706,8 @@ rows.append(
                                     data=tertile_finder.DF_TERTILES_DATA_FOR_DASH,
                                     columns=tertile_finder.DF_TERTILES_COLUMNS_FOR_DASH
                                 ),
-                                html.P("You can configure the weights and thresholds for the model below. This allows you to set the importance of the SAP vs the nunber of arms, for example."),
+                                html.P(
+                                    "You can configure the weights and thresholds for the model below. This allows you to set the importance of the SAP vs the nunber of arms, for example."),
                                 dash_table.DataTable(
                                     id="configuration_table",
                                     editable=True,
