@@ -178,3 +178,34 @@ def add_clientside_callbacks(dash_app):
         State("simulation_to_pages", "data"),
          ],
             prevent_initial_call=False)
+
+    dash_app.clientside_callback(
+        """function(data) {
+            var elementExists = document.getElementById("videoiframe");
+            if (data != null && data > 0) {
+                if (elementExists)  {
+                    elementExists.src = "https://www.youtube.com/embed/"""
+        + "EfHU1G2MVqk"
+        + """?autoplay=1";
+                   }
+                   return {"display":"inline"};
+               } else {
+                   if (elementExists)  {
+                       elementExists.src = "https://www.youtube.com/embed/"""
+        + "EfHU1G2MVqk"
+        + """";
+                   }
+                   return {"display":"none"};
+               }
+           }""",
+        Output("videodiv", "style"),
+        Input("show-video-button", "n_clicks"),
+    )
+
+    dash_app.clientside_callback(
+        """function(data) {
+            return 0;
+        }""",
+        Output("show-video-button", "n_clicks"),
+        Input("hide-video-button", "n_clicks"),
+    )

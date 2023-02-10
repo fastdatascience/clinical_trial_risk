@@ -182,8 +182,10 @@ rows = [
                     html.Br(),
                     "The tool does not store your data.",
                     html.Br(),
-                    html.A("FAQ", href="https://clinicaltrialrisk.org/faq/"), " • ",
-                    html.A("Privacy policy", href="https://clinicaltrialrisk.org/privacy-policy/")
+                    html.A("FAQ", href="https://clinicaltrialrisk.org/faq/", target="faq"), " • ",
+                    html.A("Privacy policy", href="https://clinicaltrialrisk.org/privacy-policy/", target="privacy"), " • ",
+                    html.A("Show tutorial video", id="show-video-button"), " • ",
+                    html.A("Read our blog", href="https://clinicaltrialrisk.org/blog/", target="blog")
                 ],
                 className="one-third column",
                 id="button",
@@ -650,7 +652,8 @@ rows.append(
                             [
 
                                 html.H3("Save and load configuration"),
-                                html.P("You can customize the configuration (sample size tertiles and feature weights), and save and load configurations."),
+                                html.P(
+                                    "You can customize the configuration (sample size tertiles and feature weights), and save and load configurations."),
                                 html.Div([
                                     html.Div(
                                         [
@@ -754,6 +757,31 @@ rows.append(
         className="attribution", style={"text-align": "center"}
     ),
 
+)
+
+rows.append(
+    html.Div(
+        html.Div(
+            [
+                html.Button(
+                    "Close video",
+                    id="hide-video-button",
+                ),
+                html.Br(),
+                html.Iframe(
+                    width=1120,
+                    height=630,
+                    src="https://www.youtube.com/embed/EfHU1G2MVqk",
+                    # in case Javascript fails
+                    id="videoiframe",
+                ),
+            ],
+            className="videodivinternal",
+            id="videodivinternal",
+        ),
+        className="videodiv",
+        id="videodiv",
+    ),
 )
 
 

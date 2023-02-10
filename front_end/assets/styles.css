@@ -220,3 +220,86 @@ content: " ";
   border-style: solid;
   border-color: transparent transparent black transparent;
 }
+
+
+
+#show-video-link-mobile {
+    display: none;
+    text-align: right;
+}
+@media screen and (max-width: 1400px) {
+
+    #show-video-link-desktop {
+        display: none;
+    }
+
+    #show-video-link-mobile {
+        display: block;
+    }
+}
+
+
+.videodiv {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin: 0 auto;
+    border: 0px none;
+    z-index: 4;
+    display: none;
+}
+
+.videodivinternal {
+    position: relative;
+    left: -50%;
+    top: -50%;
+    margin-top: -20%;
+}
+
+
+/* begin stuff for video */
+
+#container {
+    width: 600px;
+    height: 600px;
+    border: 2px solid #888888;
+    position: relative;
+    text-align: center;
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    height: 100%;
+    width: 100%;
+    background: #ffffff;
+    opacity: 0.6;
+    display: none;
+}
+
+#video {
+    display: none;
+    position: absolute;
+    top: 15%;
+    left: 10%;
+    width: 80%;
+    z-index: 2;
+}
+
+#video-container {
+    position: relative;
+    padding-bottom: 56.25%;
+    padding-top: 30px;
+    height: 0;
+    overflow: hidden;
+}
+
+#video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
