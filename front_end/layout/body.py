@@ -654,8 +654,24 @@ rows.append(
                             [
 
                                 html.H3("Save and load configuration"),
+
                                 html.P(
                                     "You can customize the configuration (sample size tertiles and feature weights), and save and load configurations."),
+                            html.Div([
+                                    html.Div(
+                                        [
+                                            html.P("Configuration name:", className="control_label")
+                                        ],
+
+                                    ),
+                                    html.Div(
+                                        [
+                                            dcc.Input(id="config_name", value="Untitled HIV and TB configuration", style={"width":"300px"})
+
+                                        ],
+                                    ),
+                                ], className="row flex-display", ),
+
                                 html.Div([
                                     html.Div(
                                         [

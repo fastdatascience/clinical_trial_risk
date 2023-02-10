@@ -451,24 +451,28 @@ def download_table(download_button_clicks, data, columns):
 
 @dash_app.callback(
     [
-        Output("download", "data")
+        Output("download", "data"),
     ],
     [
         Input("btn_save_pc", "n_clicks"),
         State("configuration_table", "data"),
         State("configuration_table", "columns"),
         State("tertiles_table", "data"),
-        State("tertiles_table", "columns")
+        State("tertiles_table", "columns"),
+        State("config_name", "value")
     ],
     prevent_initial_call=True
 )
-def generate_json(n_nlicks, wt_data, wt_columns, tt_data, tt_columns):
+def generate_json(n_nlicks, wt_data, wt_columns, tt_data, tt_columns, config_name):
     if n_nlicks == 0:
         return [None]
     cdf = to_df(wt_columns, wt_data)
     tdf = to_df(tt_columns, tt_data)
-    res = {'configuration_data': cdf, 'tertile_data': tdf}
-    file_name = "res.json"
+    res = {'configuration_data': cdf, 'tertile_data': tdf, 'config_name': config_name}
+
+    clean_config_name = re.sub(r'\s+', '_', config_name.lower())
+    clean_config_name = re.sub(r'[^a-z0-9_]', '', clean_config_name)
+    file_name = clean_config_name + ".json"
 
     return [dcc.send_data_frame(pd.DataFrame.from_dict(res).to_json, file_name)]
 
@@ -482,28 +486,36 @@ def generate_json(n_nlicks, wt_data, wt_columns, tt_data, tt_columns):
         State("configuration_table", "data"),
         State("configuration_table", "columns"),
         State("tertiles_table", "data"),
-        State("tertiles_table", "columns")
+        State("tertiles_table", "columns"),
+        State("config_name", "value")
     ],
     prevent_initial_call=True
 )
-def save_to_server(n_nlicks, wt_data, wt_columns, tt_data, tt_columns):
+def save_to_server(n_nlicks, wt_data, wt_columns, tt_data, tt_columns, config_name):
     if n_nlicks == 0:
         return [None]
     cdf = to_df(wt_columns, wt_data)
     tdf = to_df(tt_columns, tt_data)
-    data = {'configuration_data': cdf, 'tertile_data': tdf}
+    data = {'configuration_data': cdf, 'tertile_data': tdf, 'config_name': config_name}
     auth_user = flask.request.cookies.get('AUTH-USER')
-    save_hash_to_json(data, DOWNLOAD_DIRECTORY, auth_user)
+    save_hash_to_json(data, DOWNLOAD_DIRECTORY, auth_user, config_name)
 
 
 @dash_app.callback(
     Output("tertiles_table", "data"),
     Output("configuration_table", "data"),
+    Output("config_name", "value"),
     Input('upload-config-data', 'contents'),
     Input("config_dataset", "value"),
     prevent_initial_call=True
 )
-def upload_config(contents, values):
+def user_selects_or_uploads_config(contents, values):
+    """
+    User either selects an existing server-side configuration JSON or uploads one from local computer.
+    :param contents:
+    :param values:
+    :return:
+    """
     if values is None:
         content_type, content_string = contents.split(',')
         decoded = base64.b64decode(content_string)
@@ -519,10 +531,11 @@ def upload_config(contents, values):
             data = json.load(json_file)
     td = data["tertile_data"]
     cd = data["configuration_data"]
+    name = data["config_name"]
 
     tdd = transform_data(td)
     cdd = transform_data(cd)
-    return [tdd, cdd]
+    return [tdd, cdd, name]
 
 
 @dash_app.callback(
@@ -588,10 +601,13 @@ def transform_data(x):
     return l
 
 
-def save_hash_to_json(data, folder_name, user):
-    _file_name = str(datetime.datetime.now())
-    _file_name = _file_name.replace(" ", "_")
-    _file_name = f'{_file_name}.json'
+def save_hash_to_json(data, folder_name, user, config_name):
+    clean_config_name = re.sub(r'\s+', '_', config_name.lower())
+    clean_config_name = re.sub(r'[^a-z0-9_]', '', clean_config_name)
+
+    _file_name = datetime.datetime.today().strftime('%Y-%m-%d')
+
+    _file_name = f'{_file_name}_{clean_config_name}.json'
     if not os.path.exists(folder_name):
         os.makedirs(folder_name)
 
