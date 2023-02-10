@@ -216,6 +216,7 @@ if (auth0_auth_url != None):
         id='logout-button',
         style={'display': 'none'}
     )
+    )
 
 rows.append(
     html.Div(
