@@ -145,7 +145,7 @@ You will need to go to that folder and follow the instructions for downloading t
 
 You will need to run the Jupyter notebooks in the `train` folder to train these extra models.
 
-There is more information on training from the ClinicalTrials.gov dataset in [train/ctgov/README.md](train/README.md).
+There is more information on training from the ClinicalTrials.gov dataset in [train/ctgov/README.md](train/ctgov/README.md).
 
 ## Developer's guide: Deploying the tool as a web app to Microsoft Azure App Service
 
