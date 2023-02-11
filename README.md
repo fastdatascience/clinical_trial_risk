@@ -317,6 +317,8 @@ If you do not set the values of the environment variables, the tool will run wit
 
 Optionally, if you want to allow users to save/load configurations, you will need to deploy with Azure Blob Storage or a similar storage solution where configurations can be saved.
 
+In Microsoft Azure App Server, you can connect an instance of Azure File Storage to the app service so it is surfaced as a path on the filesystem. You then need to set environment variable `DOWNLOAD_DIRECTORY` to point to the appropriate location. Then user data can be persisted across sessions (e.g. when the server restarts).
+
 ## Built With
 
 - [Dash](https://dash.plot.ly/) - Main server and interactive components
@@ -326,6 +328,7 @@ Optionally, if you want to allow users to save/load configurations, you will nee
 - [spaCy](https://spacy.io/) - Used for NLP analysis
 - [NLTK](https://www.nltk.org/) - Used for NLP analysis
 - [Scikit-Learn](https://scikit-learn.org/) - Used for machine learning
+- [Auth0](https://auth0.com/) - Optional component for user authentication/login management
 
 ## Licences of Third Party Software
 
