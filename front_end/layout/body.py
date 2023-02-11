@@ -139,6 +139,8 @@ rows = [
     dcc.Store(id="num_subjects_and_tertile"),
     dcc.Store(id="dummy"),
     dcc.Store(id="dummy2"),
+    dcc.Store(id="dummy3"),
+    dcc.Store(id="deleted_message"),
     dcc.Download("download_excel"),
     dcc.Download("download_pdf"),
     html.Div(id="output-clientside"),
@@ -657,7 +659,7 @@ rows.append(
 
                                 html.P(
                                     "You can customize the configuration (sample size tertiles and feature weights), and save and load configurations."),
-                            html.Div([
+                                html.Div([
                                     html.Div(
                                         [
                                             html.P("Configuration name:", className="control_label")
@@ -666,7 +668,8 @@ rows.append(
                                     ),
                                     html.Div(
                                         [
-                                            dcc.Input(id="config_name", value="Untitled HIV and TB configuration", style={"width":"300px"})
+                                            dcc.Input(id="config_name", value="Untitled HIV and TB configuration",
+                                                      style={"width": "300px"})
 
                                         ],
                                     ),
@@ -682,6 +685,11 @@ rows.append(
                                                 className="dcc_control"
                                             ),
                                             html.Button("Save To Server", id="btn_save_server"),
+                                            html.Button("Delete From Server", id="btn_delete_server"),
+                                            dcc.ConfirmDialog(
+                                                id='confirm-danger',
+                                                message='Are you sure you want to delete this configuration?',
+                                            ),
                                             dcc.Download(id="download_server"),
                                         ],
                                         id='server-div',

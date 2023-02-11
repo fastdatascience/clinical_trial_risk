@@ -16,9 +16,9 @@ import pandas as pd
 from dash import ctx
 from dash import dcc, html, Input, Output
 from dash.dependencies import State
+from tika import parser
 
 from layout.body import get_body, file_to_text
-from tika import parser
 from util import graph_callbacks
 # from dash_auth0_oauth.Auth0_auth import Auth0Auth
 from util.auth0 import Auth0Auth
@@ -502,6 +502,27 @@ def save_to_server(n_nlicks, wt_data, wt_columns, tt_data, tt_columns, config_na
 
 
 @dash_app.callback(
+    [
+        Output("deleted_message", "data")
+    ],
+    [
+        Input('confirm-danger', 'submit_n_clicks'),
+        State('confirm-danger', 'message'),
+    ],
+    prevent_initial_call=True
+)
+def delete_from_server(submit_n_clicks, message):
+    config_name = re.sub(r'.+\[', '', message)
+    config_name = re.sub(r'\].+', '', config_name)
+    auth_user = flask.request.cookies.get('AUTH-USER')
+    delete_config(DOWNLOAD_DIRECTORY, auth_user, config_name)
+
+    print("deleted config name " + config_name)
+
+    return ["Deleted config [" + config_name + "]"]
+
+
+@dash_app.callback(
     Output("tertiles_table", "data"),
     Output("configuration_table", "data"),
     Output("config_name", "value"),
@@ -599,6 +620,13 @@ def transform_data(x):
                 for b in arr:
                     l.append({a: b})
     return l
+
+
+def delete_config(folder_name, user, file_name):
+    fl = user_folder(user)
+    f = os.path.join(folder_name, fl)
+    file_path = os.path.join(f, file_name)
+    os.remove(file_path)
 
 
 def save_hash_to_json(data, folder_name, user, config_name):

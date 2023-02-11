@@ -107,9 +107,6 @@ def add_clientside_callbacks(dash_app):
         [Input("interval", "n_intervals")]
     )
 
-
-
-
     # When the user clicks "Send feedback" we auto-populate a Google form.
     dash_app.clientside_callback(
         """function(send_feedback, file_name,    condition, condition_to_pages,
@@ -160,24 +157,24 @@ def add_clientside_callbacks(dash_app):
             return False;
         }""",
         [Output("dummy2", "value")],
-        [Input("send_feedback", "n_clicks"),  State("file_name", "data"), State("condition", "value"),
-        State("condition_to_pages", "data"),
-        State("phase", "value"),
-        State("phase_to_pages", "data"),
-        State("sap", "value"),
-        State("sap_to_pages", "data"),
-        State("effect_estimate", "value"),
-        State("effect_estimate_to_pages", "data"),
-        State("num_subjects", "value"),
-        State("num_subjects_to_pages", "data"),
-        State("num_arms", "value"),
-        State("num_arms_to_pages", "data"),
-        State("countries", "value"),
-        State("country_to_pages", "data"),
-        State("simulation", "value"),
-        State("simulation_to_pages", "data"),
+        [Input("send_feedback", "n_clicks"), State("file_name", "data"), State("condition", "value"),
+         State("condition_to_pages", "data"),
+         State("phase", "value"),
+         State("phase_to_pages", "data"),
+         State("sap", "value"),
+         State("sap_to_pages", "data"),
+         State("effect_estimate", "value"),
+         State("effect_estimate_to_pages", "data"),
+         State("num_subjects", "value"),
+         State("num_subjects_to_pages", "data"),
+         State("num_arms", "value"),
+         State("num_arms_to_pages", "data"),
+         State("countries", "value"),
+         State("country_to_pages", "data"),
+         State("simulation", "value"),
+         State("simulation_to_pages", "data"),
          ],
-            prevent_initial_call=False)
+        prevent_initial_call=False)
 
     dash_app.clientside_callback(
         """function(data) {
@@ -209,3 +206,27 @@ def add_clientside_callbacks(dash_app):
         Output("show-video-button", "n_clicks"),
         Input("hide-video-button", "n_clicks"),
     )
+
+    dash_app.clientside_callback(
+        """function(n, dataset) {
+            if (dataset != null && dataset.length > 0) {
+                return [true, "Are you sure you want to delete the configuration [" + dataset + "] from the server?"];
+            }
+            return [false, ""];
+        }""",
+        [Output("confirm-danger", "displayed"),
+         Output("confirm-danger", "message")],
+        [Input("btn_delete_server", "n_clicks"),
+         State("config_dataset", "value")],
+        prevent_initial_call=False)
+
+    dash_app.clientside_callback(
+        """function(message) {
+            if (message != null && message.length > 0) {
+                alert(message);
+            }
+            return [None];
+        }""",
+        [Output("dummy3", "data")],
+        [Input("deleted_message", "data")],
+        prevent_initial_call=False)
