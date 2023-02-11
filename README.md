@@ -69,6 +69,8 @@ python -c 'import nltk; nltk.download("stopwords")'
 
 ### Running the front end app locally
 
+There is more information in [front_end/README.md](front_end/README.md).
+
 Go into `front_end` and run
 
 ```
@@ -78,6 +80,8 @@ python application.py
 You can then open your browser at `localhost:8050` and you will see the tool.
 
 ### Working with the training data and re-training the machine learning models
+
+There is more information on obtaining the training data in [data/README.md](train/README.md). Most data could not be supplied directly in this repository due to copyright and licensing restrictions.
 
 If you don't have the training data, go into `data/raw_protocols` folder and run
 
@@ -102,6 +106,8 @@ If you want the tool to have some demo protocols in the dropdown, you can run `d
 ![Demo data](screenshots/demo_protocols.png)
 
 ### Training the classifier model
+
+There is more information on training in [train/README.md](train/README.md).
 
 Go into the `train` folder and run
 
@@ -138,6 +144,8 @@ This is in *data/ctgov*.
 You will need to go to that folder and follow the instructions for downloading the Postgres data dump, and then run the shell scripts and Jupyter notebooks to generate the dataset.
 
 You will need to run the Jupyter notebooks in the `train` folder to train these extra models.
+
+There is more information on training from the ClinicalTrials.gov dataset in [train/ctgov/README.md](train/README.md).
 
 ## Developer's guide: Deploying the tool as a web app to Microsoft Azure App Service
 
