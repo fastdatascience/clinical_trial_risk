@@ -149,7 +149,7 @@ high_risk_threshold : int,
         )
 
     errors = []
-    if phase is None or phase == 0 or phase == -1:
+    if phase is None or phase == -1:
         errors.append("PHASE")
     if sap == -1:
         errors.append("SAP")
