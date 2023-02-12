@@ -36,7 +36,7 @@ high_risk_threshold : int,
 
     start_time = time.time()
     num_subjects, num_subjects_tertile, lower_tertile, upper_tertile = num_subjects_and_tertile
-    if phase is None or phase == 0:
+    if phase is None:
         phase, lower_tertile, upper_tertile, num_subjects_tertile, num_subjects_tertile_name = None, None, None, None, ""
     else:
         if num_subjects_tertile == 0:
