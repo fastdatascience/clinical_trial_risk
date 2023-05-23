@@ -184,6 +184,8 @@ rows = [
                     "Protocols with SAP as a separate PDF are not supported.",
                     html.Br(),
                     "The tool does not store your data.",
+                    html.Br(),                    
+                    "DOI: ", html.A(["10.12688/gatesopenres.14416.1"], href="https://doi.org/10.12688/gatesopenres.14416.1", target="gates"),
                     html.Br(),
                     html.A("FAQ", href="https://clinicaltrialrisk.org/faq/", target="faq"), " • ",
                     html.A("Privacy policy", href="https://clinicaltrialrisk.org/privacy-policy/", target="privacy"),
@@ -778,7 +780,10 @@ rows.append(
             html.A(["Fast Data Science"], href="https://fastdatascience.com", target="fds"),
             ". ",
             html.A(["View source code on Github"], href="https://github.com/fastdatascience/clinical_trial_risk",
-                   target="github")
+                   target="github"),
+           html.Br(),        
+             html.Div(["How to cite: Wood TA and McNair D. ", html.I(" Clinical Trial Risk Tool: software application using natural language processing to identify the risk of trial uninformativeness [version 1; peer review: awaiting peer review]."), " Gates Open Res 2023, 7:56 (", html.A("https://doi.org/10.12688/gatesopenres.14416.1", href="https://doi.org/10.12688/gatesopenres.14416.1"), ")"]),
+                    html.Br(),
         ],
         className="attribution", style={"text-align": "center"}
     ),
