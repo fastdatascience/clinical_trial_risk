@@ -184,8 +184,10 @@ rows = [
                     "Protocols with SAP as a separate PDF are not supported.",
                     html.Br(),
                     "The tool does not store your data.",
-                    html.Br(),                    
-                    "DOI: ", html.A(["10.12688/gatesopenres.14416.1"], href="https://doi.org/10.12688/gatesopenres.14416.1", target="gates"),
+                    html.Br(),
+                    "DOI: ",
+                    html.A(["10.12688/gatesopenres.14416.1"], href="https://doi.org/10.12688/gatesopenres.14416.1",
+                           target="gates"),
                     html.Br(),
                     html.A("FAQ", href="https://clinicaltrialrisk.org/faq/", target="faq"), " • ",
                     html.A("Privacy policy", href="https://clinicaltrialrisk.org/privacy-policy/", target="privacy"),
@@ -206,25 +208,23 @@ rows = [
 auth0_auth_url = os.environ.get('AUTH0_AUTH_URL', None)
 # print("auth0_auth_url " + auth0_auth_url)
 
-
+login_style = {"display": "none"}
 if (auth0_auth_url != None):
-    left_div.append(html.Div(
-        [
-            html.A(html.Button('click to login'), href='/login')
-        ],
-        id='login-button',
-        style={'display': 'none'}
-    )
-    )
-
-    left_div.append(html.Div(
-        [
-            html.A(html.Button('click to logout'), href='/logout')
-        ],
-        id='logout-button',
-        style={'display': 'none'}
-    )
-    )
+    login_style = None
+left_div.append(html.Span([html.Div(
+    [
+        html.A(html.Button('click to login'), href='/login')
+    ],
+    id='login-button',
+    style={'display': 'none'}
+), html.Div(
+    [
+        html.A(html.Button('click to logout'), href='/logout')
+    ],
+    id='logout-button',
+    style={'display': 'none'}
+)
+], style=login_style))
 
 rows.append(
 
@@ -781,9 +781,13 @@ rows.append(
             ". ",
             html.A(["View source code on Github"], href="https://github.com/fastdatascience/clinical_trial_risk",
                    target="github"),
-           html.Br(),        
-             html.Div(["How to cite: Wood TA and McNair D. ", html.I(" Clinical Trial Risk Tool: software application using natural language processing to identify the risk of trial uninformativeness [version 1; peer review: awaiting peer review]."), " Gates Open Res 2023, 7:56 (", html.A("https://doi.org/10.12688/gatesopenres.14416.1", href="https://doi.org/10.12688/gatesopenres.14416.1"), ")"]),
-                    html.Br(),
+            html.Br(),
+            html.Div(["How to cite this tool: Wood TA and McNair D. ", html.I(
+                " Clinical Trial Risk Tool: software application using natural language processing to identify the risk of trial uninformativeness [version 1; peer review: awaiting peer review]."),
+                      " Gates Open Res 2023, 7:56 (", html.A("https://doi.org/10.12688/gatesopenres.14416.1",
+                                                             href="https://doi.org/10.12688/gatesopenres.14416.1"),
+                      ")"]),
+            html.Br(),
         ],
         className="attribution", style={"text-align": "center"}
     ),

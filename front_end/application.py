@@ -6,6 +6,7 @@ import os
 import re
 import time
 import traceback
+from dash import html, no_update
 
 import dash
 # import dash_auth
@@ -96,19 +97,19 @@ dash_app.layout = get_body()
             Output("server-div", "style"),
             Output("export_pdf", "style")
             ],
-    inputs=[Input("location", "href"),
-	    Input("location", "pathname"),
-	    Input("interval", "n_intervals")]
+    inputs=[Input("location", "href")]
 )
-def show_hide_login_button(location, pathname, _):
-    print ("Location is", location, pathname)
-    if "nl" in pathname:
+def show_hide_login_button(location):
+    print ("Location is", location)
+    if "nl" in location:
         return [{'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}]
     auth_user = flask.request.cookies.get('AUTH-USER')
     if auth_user is None:
         return [{'display': 'block'}, {'display': 'none'}, {'display': 'none'}, {}]
     else:
         return [{'display': 'none'}, {'display': 'block'}, {'display': 'block'}, {}]
+
+
 
 
 @dash_app.callback(
@@ -550,6 +551,8 @@ def user_selects_or_uploads_config(contents, values):
 
     else:
         auth_user = flask.request.cookies.get('AUTH-USER')
+        if auth_user is None:
+            return no_update, no_update, no_update
         f = user_folder(auth_user)
         file_path = os.path.join(DOWNLOAD_DIRECTORY, f)
         file_path = os.path.join(file_path, values)
@@ -571,6 +574,8 @@ def user_selects_or_uploads_config(contents, values):
 )
 def update_config_options(location):
     auth_user = flask.request.cookies.get('AUTH-USER')
+    if auth_user is None:
+        return no_update
     f = user_folder(auth_user)
     file_path = os.path.join(DOWNLOAD_DIRECTORY, f)
 
@@ -578,25 +583,6 @@ def update_config_options(location):
 
     return [{"label": d, "value": d} for d in file_names]
 
-
-# @dash_app.callback(
-#     Output("tertiles_table", "data"),
-#     Output("configuration_table", "data"),
-#     Input("config_dataset", "value"),
-# )
-# def load_from_server(value):
-#     auth_user = flask.request.cookies.get('AUTH-USER')
-#     f = user_folder(auth_user)
-#     file_path = os.path.join(DOWNLOAD_DIRECTORY, f)
-#
-#     with open(file_path) as json_file:
-#         data = json.load(json_file)
-#         td = data["tertile_data"]
-#         cd = data["configuration_data"]
-#
-#         tdd = transform_data(td)
-#         cdd = transform_data(cd)
-#         return [tdd, cdd]
 
 
 def to_df(columns, data):
