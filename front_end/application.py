@@ -93,16 +93,22 @@ dash_app.layout = get_body()
 @dash_app.callback(
     output=[Output("login-button", "style"),
             Output("logout-button", "style"),
-            Output("server-div", "style")
+            Output("server-div", "style"),
+            Output("export_pdf", "style")
             ],
-    inputs=[Input("location", "href")]
+    inputs=[Input("location", "href"),
+	    Input("location", "pathname"),
+	    Input("interval", "n_intervals")]
 )
-def show_hide_login_button(location):
+def show_hide_login_button(location, pathname, _):
+    print ("Location is", location, pathname)
+    if "nl" in pathname:
+        return [{'display': 'none'}, {'display': 'none'}, {'display': 'none'}, {'display': 'none'}]
     auth_user = flask.request.cookies.get('AUTH-USER')
     if auth_user is None:
-        return [{'display': 'block'}, {'display': 'none'}, {'display': 'none'}]
+        return [{'display': 'block'}, {'display': 'none'}, {'display': 'none'}, {}]
     else:
-        return [{'display': 'none'}, {'display': 'block'}, {'display': 'block'}]
+        return [{'display': 'none'}, {'display': 'block'}, {'display': 'block'}, {}]
 
 
 @dash_app.callback(
