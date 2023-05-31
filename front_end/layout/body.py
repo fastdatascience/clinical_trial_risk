@@ -780,7 +780,7 @@ rows.append(
             html.A(["Fast Data Science"], href="https://fastdatascience.com", target="fds"),
             ". ",
             html.A(["View source code on Github"], href="https://github.com/fastdatascience/clinical_trial_risk",
-                   target="github"),
+                   target="github", id="github"),
             html.Br(),
             html.Div(["How to cite this tool: Wood TA and McNair D. ", html.I(
                 " Clinical Trial Risk Tool: software application using natural language processing to identify the risk of trial uninformativeness [version 1; peer review: awaiting peer review]."),
