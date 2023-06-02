@@ -1,5 +1,15 @@
 # Protocol Analysis Tool for Clinical Trial Risk
 
+## Update: Dash in Action webinar on 7 June 2023
+
+![The Dash App webinar](screenshots/1684787269147.png)
+
+Thomas Wood of [Fast Data Science](http://fastdatascience.com/) will present this tool at the Dash in Action webinar, showing how the app uses [Natural Language Processing](https://naturallanguageprocessing.com) to estimate the risk of a clinical trial failing.
+
+You can sign up at: https://go.plotly.com/dash-in-action
+
+## Where everything is 
+
 Live demo available at: https://app.clinicaltrialrisk.org/
 
 Project website at: https://clinicaltrialrisk.org/
