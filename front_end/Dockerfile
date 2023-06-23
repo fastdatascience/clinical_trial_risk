@@ -24,6 +24,8 @@ RUN pip install -r requirements.txt
 
 RUN python -c 'import nltk; nltk.download("stopwords")'
 
+RUN pip install pydantic==1.10.9
+
 # Copy application code to the image
 COPY . /app/
 
