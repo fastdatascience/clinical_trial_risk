@@ -1,14 +1,20 @@
-version: "3"
+version: '3.3'
+
 services:
-  protocols-front:
-    image: regprotocolsfds.azurecr.io/protocols-front
-    build: .
-    ports:
-      - "80:80"
-    environment:
-      - TIKA_SERVER_ENDPOINT=http://protocols-tika:9998
-  protocols-tika:
-    image: regprotocolsfds.azurecr.io/protocols-tika
-    build: ./tika
-    ports:
-      - "9998:9998"
+   api:
+     image: fastdatascience/clinical_trial_risk:20230623214440_cf82f4e
+     depends_on:
+       - tika
+     ports:
+       - "8000:80"
+     restart: always
+     environment:
+        DOWNLOAD_DIRECTORY: /downloads
+        TIKA_SERVER_ENDPOINT: http://tika:9998
+
+
+   tika:
+     image: apache/tika:2.8.0.0-full
+     ports:
+       - "9998:9998"
+     restart: always
