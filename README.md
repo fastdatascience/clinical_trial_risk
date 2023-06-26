@@ -4,9 +4,9 @@
 
 ![The Dash App webinar](screenshots/1684787269147.png)
 
-Thomas Wood of [Fast Data Science](http://fastdatascience.com/) will present this tool at the Dash in Action webinar, showing how the app uses [Natural Language Processing](https://naturallanguageprocessing.com) to estimate the risk of a clinical trial failing.
+Thomas Wood of [Fast Data Science](http://fastdatascience.com/) presented this tool at the [Plotly](https://plotly.com/) [Dash in Action webinar](https://go.plotly.com/dash-in-action), showing how the app uses [Natural Language Processing](https://naturallanguageprocessing.com) to estimate the risk of a clinical trial failing.
 
-You can sign up at: https://go.plotly.com/dash-in-action
+[![The Dash App webinar](screenshots/649952f2b9be2-fbutube-Screenshot from 2023-06-26 09-54-23.png)](https://youtu.be/KL8cytV1qRA?t=2111)
 
 ## Where everything is 
 
