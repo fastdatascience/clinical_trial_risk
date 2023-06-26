@@ -358,3 +358,26 @@ In Microsoft Azure App Server, you can connect an instance of Azure File Storage
 ## References
 
 * Deploying a Dash webapp via Docker to Azure: https://medium.com/swlh/deploy-a-dash-application-in-azure-using-docker-ed46c4b9d2b2
+
+## How to cite the Clinical Trial Risk Tool?
+
+If you would like to cite the tool alone, you can cite:
+
+Wood TA and McNair D. Clinical Trial Risk Tool: software application using natural language processing to identify the risk of trial uninformativeness. Gates Open Res 2023, 7:56 doi: 10.12688/gatesopenres.14416.1.
+
+A BibTeX entry for LaTeX users is
+
+```
+@article{Wood_2023,
+	doi = {10.12688/gatesopenres.14416.1},
+	url = {https://doi.org/10.12688%2Fgatesopenres.14416.1},
+	year = 2023,
+	month = {apr},
+	publisher = {F1000 Research Ltd},
+	volume = {7},
+	pages = {56},
+	author = {Thomas A Wood and Douglas McNair},
+	title = {Clinical Trial Risk Tool: software application using natural language processing to identify the risk of trial uninformativeness},
+	journal = {Gates Open Research}
+}
+```
