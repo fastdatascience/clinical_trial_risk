@@ -132,6 +132,7 @@ acc = accuracy_score(df.ground_truth, df.y_pred)
 print(f"Accuracy using {len(df)}-fold cross-validation is {acc * 100:.2f}%")
 
 def lookup_number(x):
+    x = x.lower()
     if x in num_lookup:
         return num_lookup[x]
     else:
