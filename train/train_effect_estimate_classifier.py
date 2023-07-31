@@ -179,9 +179,7 @@ with open(DIAGNOSTICS_FILE_TOKENS_AND_BIGRAMS, "w", encoding="utf-8") as f:
     for (token1, token2), frequency in sorted(fdist.items(), key=operator.itemgetter(1), reverse=True)[:200]:
         f.write(f"{token1}\t{token2}\t{frequency}\n")
 
-vectoriser = CountVectorizer(lowercase=True, stop_words=stops, min_df=1, max_features=NUM_FEATURES,
-                             analyzer=tokenise_text_and_lowercase
-                             )
+vectoriser = CountVectorizer(lowercase=True, stop_words=list(stops), min_df=1, max_features=NUM_FEATURES)
 transformer = TfidfTransformer()
 
 nb = MultinomialNB()
