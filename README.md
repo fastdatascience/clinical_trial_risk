@@ -10,7 +10,7 @@
 <a href="https://medium.com/fast-data-science"><img align="left" src="https://raw.githubusercontent.com//harmonydata/.github/main/profile/medium.svg" alt="Fast Data Science | Medium" width="21px"/></a>
 <a href="https://mastodon.social/@fastdatascience"><img align="left" src="https://raw.githubusercontent.com//harmonydata/.github/main/profile/mastodon.svg" alt="Fast Data Science | Mastodon" width="21px"/></a>
 
-# Protocol Analysis Tool for Clinical Trial Risk
+# Clinical Trial Risk Tool - analysis of clinical trial protocols
 
 ## Update: Dash in Action webinar on 7 June 2023
 
