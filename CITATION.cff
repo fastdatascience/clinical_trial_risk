@@ -1,0 +1,67 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: >-
+  Clinical Trial Risk Tool: software application using
+  natural language processing to identify the risk of trial
+  uninformativeness
+message: 'If you use this software, please cite it as below.'
+type: software
+authors:
+  - family-names: Wood
+    given-names: Thomas
+    orcid: 'https://orcid.org/0000-0001-8962-8571'
+  - family-names: McNair
+    given-names: Douglas
+    orcid: 'https://orcid.org/0000-0003-0965-883X'
+identifiers:
+  - type: doi
+    value: 10.12688/gatesopenres.14416.1
+repository-code: 'https://github.com/fastdatascience/clinical_trial_risk'
+url: 'https://fastdatascience.com/clinical-trial-risk-tool/'
+repository: 'https://gatesopenresearch.org/articles/7-56/v1'
+repository-artifact: 'https://clinicaltrialrisk.org/'
+abstract: >-
+  Background: A large proportion of clinical trials end
+  without delivering results that are useful for clinical,
+  policy, or research decisions. This problem is called
+  “uninformativeness”. Some high-risk indicators of
+  uninformativeness can be identified at the stage of
+  drafting the protocol, however the necessary information
+  can be hard to find in unstructured text documents.
+
+  Methods: We have developed a browser-based tool which uses
+  natural language processing to identify and quantify the
+  risk of uninformativeness. The tool reads and parses the
+  text of trial protocols and identifies key features of the
+  trial design, which are fed into a risk model. The
+  application runs in a browser and features a graphical
+  user interface that allows a user to drag and drop the PDF
+  of the trial protocol and visualize the risk indicators
+  and their locations in the text. The user can correct
+  inaccuracies in the tool’s parsing of the text. The tool
+  outputs a PDF report listing the key features extracted.
+  The tool is focused HIV and tuberculosis trials but could
+  be extended to more pathologies in future.
+
+  Results: On a manually tagged dataset of 300 protocols,
+  the tool was able to identify the condition of a trial
+  with 100% area under curve (AUC), presence or absence of
+  statistical analysis plan with 87% AUC, presence or
+  absence of effect estimate with 95% AUC, number of
+  subjects with 69% accuracy, and simulation with 98% AUC.
+  On a dataset of 11,925 protocols downloaded from
+  ClinicalTrials.gov, the tool was able to identify trial
+  phase with 75% accuracy, number of arms with 58% accuracy,
+  and the countries of investigation with 87% AUC.
+
+  Conclusion: We have developed and validated a natural
+  language processing tool for identifying and quantifying
+  risks of uninformativeness in clinical trial protocols.
+  The software is open-source and can be accessed at the
+  following link: https://app.clinicaltrialrisk.org
+license: MIT
+version: 1
+date-released: '2023-09-15'
+doi: 10.12688/gatesopenres.14416.1
