@@ -30,7 +30,7 @@ Based on the Dash Natural Gas demo: https://github.com/plotly/dash-sample-apps
 
 Runs on Dash interactive Python framework developed by [Plotly](https://plot.ly/). 
 
-Developed by Thomas Wood / Fast Data Science, https://fastdatascience.com
+[Developed by Thomas Wood](https://fastdatascience.com/clinical-trial-risk-tool/) / Fast Data Science, https://fastdatascience.com
 
 This tool is written in Python using the Dash front end library and the Java library Tika for reading PDFs, and runs on Linux, Mac, and Windows, and can be deployed as a web app using Docker.
 
@@ -375,7 +375,7 @@ In Microsoft Azure App Server, you can connect an instance of Azure File Storage
 
 If you would like to cite the tool alone, you can cite:
 
-Wood TA and McNair D. Clinical Trial Risk Tool: software application using natural language processing to identify the risk of trial uninformativeness. Gates Open Res 2023, 7:56 doi: 10.12688/gatesopenres.14416.1.
+Wood TA and McNair D. [Clinical Trial Risk Tool](https://fastdatascience.com/clinical-trial-risk-tool/): software application using natural language processing to identify the risk of trial uninformativeness. Gates Open Res 2023, 7:56 doi: [10.12688/gatesopenres.14416.1](https://gatesopenresearch.org/articles/7-56).
 
 A BibTeX entry for LaTeX users is
 
