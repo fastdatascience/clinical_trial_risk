@@ -12,14 +12,6 @@
 
 # Clinical Trial Risk Tool - analysis of clinical trial protocols
 
-## Update: Dash in Action webinar on 7 June 2023
-
-![The Dash App webinar](screenshots/1684787269147.png)
-
-Thomas Wood of [Fast Data Science](http://fastdatascience.com/) presented this tool at the [Plotly](https://plotly.com/) [Dash in Action webinar](https://go.plotly.com/dash-in-action), showing how the app uses [Natural Language Processing](https://naturallanguageprocessing.com) to estimate the risk of a clinical trial failing.
-
-[![The Dash App webinar](/screenshots/video.jpg)](https://youtu.be/KL8cytV1qRA?t=2111 "The Dash App webinar")
-
 ## Where everything is 
 
 Live demo available at: https://app.clinicaltrialrisk.org/
@@ -28,15 +20,21 @@ Project website at: https://clinicaltrialrisk.org/
 
 Based on the Dash Natural Gas demo: https://github.com/plotly/dash-sample-apps
 
-Runs on Dash interactive Python framework developed by [Plotly](https://plot.ly/). 
+**⚡💻 Quick start in Docker:**
+
+```
+docker run fastdatascience/clinical_trial_risk
+```
+
+This app runs on Dash interactive Python framework developed by [Plotly](https://plot.ly/). 
 
 [Developed by Thomas Wood](https://fastdatascience.com/clinical-trial-risk-tool/) / Fast Data Science, https://fastdatascience.com
 
-This tool is written in Python using the Dash front end library and the Java library Tika for reading PDFs, and runs on Linux, Mac, and Windows, and can be deployed as a web app using Docker.
+The Clinical Trial Risk Tool is written in Python using the Dash front end library and the Java library Tika for reading PDFs, and runs on Linux, Mac, and Windows, and can be deployed as a web app using Docker.
 
 You can read a walkthrough of how the tool works [here](https://clinicaltrialrisk.org/how-the-clinical-trial-risk-tool-works/) and of how accurate it is [here](https://clinicaltrialrisk.org/accurate-clinical-trial-risk-tool/).
 
-## Very quick guide to running the tool on your computer
+## Very quick guide to running the tool on your computer as a developer using Docker
 
 1. Install [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
 
@@ -52,10 +50,10 @@ Alternatively to the above, you can click the Download button in the top right i
 ![Download button in github.com](screenshots/clone-screenshot.png)
 
 4. Install [Docker](https://docs.docker.com/get-docker/).
-5. Install [Docker Compose](https://docs.docker.com/compose/gettingstarted/).
-6. Open a command line or Terminal window. Change folder to where you downloaded and unzipped the repository, and go to the folder `front_end`.  Run the following command:
+5. Open a command line or Terminal window. Change folder to where you downloaded and unzipped the repository, and go to the folder `front_end`.  Run the following command:
 ```
-docker-compose up
+docker build
+docker run
 ```
 7. Open your browser at `https://localhost:80`
 ![The web app running](screenshots/applocal.png)
@@ -99,7 +97,7 @@ Go into `front_end` and run
 python application.py
 ```
 
-You can then open your browser at `localhost:8050` and you will see the tool.
+You can then open your browser at `localhost:8050` and you will see the Clinical Trial Risk Tool.
 
 ### Working with the training data and re-training the machine learning models
 
@@ -370,6 +368,14 @@ In Microsoft Azure App Server, you can connect an instance of Azure File Storage
 ## References
 
 * Deploying a Dash webapp via Docker to Azure: https://medium.com/swlh/deploy-a-dash-application-in-azure-using-docker-ed46c4b9d2b2
+
+## News: Dash in Action webinar on 7 June 2023
+
+![The Dash App webinar](screenshots/1684787269147.png)
+
+Thomas Wood of [Fast Data Science](http://fastdatascience.com/) presented this tool at the [Plotly](https://plotly.com/) [Dash in Action webinar](https://go.plotly.com/dash-in-action), showing how the app uses [Natural Language Processing](https://naturallanguageprocessing.com) to estimate the risk of a clinical trial failing.
+
+[![The Dash App webinar](/screenshots/video.jpg)](https://youtu.be/KL8cytV1qRA?t=2111 "The Dash App webinar")
 
 ## How to cite the Clinical Trial Risk Tool?
 
