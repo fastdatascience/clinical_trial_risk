@@ -1,18 +1,6 @@
 FROM python:3.9
 # Install Java - necessary for Tika
-RUN apt-get update
-#RUN apt-get install default-jre -y
-RUN apt-get install wkhtmltopdf -y
-# RUN wget https://dlcdn.apache.org/tika/2.4.0/tika-server-standard-2.4.0.jar
-
-#ENV TIKA_SERVER_JAR=https://dlcdn.apache.org/tika/2.4.0/tika-server-standard-2.4.0.jar
-# Special treatment for Tika and Spacy at beginning of building container
-#RUN pip install tika==1.24
-RUN pip install spacy==3.2.3
-# Make sure Tika Jar file is downloaded
-#RUN python -c 'import tika; tika.initVM(); from tika import parser; import io; parser.from_buffer(io.BytesIO(b""), xmlContent=True)'
-# Make sure Spacy language model is downloaded
-#RUN python -m spacy download en_core_web_sm
+RUN apt update && apt install -y default-jre tesseract-ocr default-jre wkhtmltopdf
 
 # Create a directory where the code is to be hosted
 RUN mkdir /app
@@ -22,9 +10,12 @@ WORKDIR /app
 COPY requirements.txt /app/requirements.txt
 RUN pip install -r requirements.txt
 
+# Make sure Tika Jar file is downloaded
+RUN python -c 'import io; from tika import parser; parser.from_buffer(io.BytesIO(b""), xmlContent=True)'
+# Make sure Spacy language model is downloaded
+RUN python -m spacy download en_core_web_sm
+# Make sure NLTK stopwords are downloaded
 RUN python -c 'import nltk; nltk.download("stopwords")'
-
-RUN pip install pydantic==1.10.9
 
 # Copy application code to the image
 COPY . /app/
