@@ -11,7 +11,7 @@ lxml==4.6.3
 tika==1.24
 pycountry==22.1.10
 dash-auth==1.4.1
-spacy==3.2.3
+spacy==3.7.2
 xlsxwriter==3.0.3
 wordcloud==1.8.1
 pdfkit==1.0.0

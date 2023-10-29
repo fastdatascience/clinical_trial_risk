@@ -2,6 +2,7 @@ FROM python:3.9
 # Install Java - necessary for Tika
 RUN apt update && apt install -y default-jre tesseract-ocr default-jre wkhtmltopdf
 
+
 # Create a directory where the code is to be hosted
 RUN mkdir /app
 # Define the working directory in the container
@@ -16,8 +17,7 @@ RUN python -c 'import io; from tika import parser; parser.from_buffer(io.BytesIO
 RUN python -m spacy download en_core_web_sm
 # Make sure NLTK stopwords are downloaded
 RUN python -c 'import nltk; nltk.download("stopwords")'
-# Fix dependency conflict
-RUN pip install pydantic==1.10.9
+
 
 # Copy application code to the image
 COPY . /app/

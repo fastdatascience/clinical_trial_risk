@@ -227,7 +227,7 @@ div {
         # with open("/tmp/tmp.html", "w", encoding="utf-8") as f:
         #     f.write(doc_html)
 
-        pdf_bytes = pdfkit.from_string(doc_html)
+        pdf_bytes = pdfkit.from_string(doc_html, options={"enable-local-file-access": ""})
 
     except:
         print("Error generating PDF\n", traceback.format_exc())
