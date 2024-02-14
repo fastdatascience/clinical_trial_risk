@@ -88,7 +88,7 @@ annotated_files = list([a for a in annotations.keys() if a in file_to_text])
 
 
 # Specially engineered regex to include 95%, 95%ci, etc
-vectoriser = CountVectorizer(lowercase=True, stop_words=stops, min_df=5, max_features=NUM_FEATURES,
+vectoriser = CountVectorizer(lowercase=True, stop_words=list(stops), min_df=5, max_features=NUM_FEATURES,
                              token_pattern=r'[59][05]%?(?:ci)?|[a-z][a-z]+')
 transformer = TfidfTransformer()
 
