@@ -15,6 +15,7 @@ Then I ran the following commands to import the database dump into my local Post
 
 ```
 sudo -u postgres psql postgres
+CREATE DATABASE aact
 GRANT ALL PRIVILEGES ON DATABASE aact TO PUBLIC;
 CREATE ROLE ctti;
 ALTER ROLE ctti WITH LOGIN;
