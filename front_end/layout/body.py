@@ -106,6 +106,7 @@ explanation_options = [
 left_div = []
 
 # Construct the HTML elements of the UI.
+
 rows = [
     # Google Tag Manager
     google_tag_manager_iframe,
@@ -159,6 +160,9 @@ rows = [
                                 style={"margin-bottom": "0px"},
                             ),
                             html.Div(
+                                html.A(href="https://clinical.fastdatascience.com/login?guest=true", target="v2", children=[
+                                "Update (January 2025): Try Clinical Trial Risk Tool Version 2.0! More pathologies covered, and documents can be saved!"]), style={"background-color": "#c6f7ca"} ),
+                            html.Div(
                                 "Analyse your HIV and TB Clinical Trial Protocols and identify risk factors using Natural Language Processing.", ),
                             html.Div(
                                 "Upload a Clinical Trial Protocol in PDF format, and the tool will generate a risk assessment of the trial.", ),
@@ -204,7 +208,6 @@ rows = [
         style={"margin-bottom": "25px"},
     ),
 ]
-
 auth0_auth_url = os.environ.get('AUTH0_AUTH_URL', None)
 # print("auth0_auth_url " + auth0_auth_url)
 
